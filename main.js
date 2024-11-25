@@ -1,49 +1,101 @@
 class Counter {
   #count;
+  #defaultCount;
   #step;
-  #timerId;
-
-  beepAudio = new Audio("");
 
   constructor(initialCount = 600) {
-    this.criticalCount = 5;
-    this.#step = 1;
-    this.hasStarted = false;
-    this.observers = [];
-
+    this.#defaultCount = initialCount;
     this.#count = initialCount;
-    this.remainingCount = initialCount;
+    this.#step = 1;
   }
 
   increment() {
-    this.reset();
     this.#count += this.#step;
   }
 
+  incrementBy(value) {
+    this.#count += value;
+  }
+
   decrement() {
-    this.reset();
     this.#count -= this.#step;
+  }
+
+  decrementBy(value) {
+    this.#count -= value
   }
 
   setStep(newStep) {
     this.#step = newStep;
   }
+
   getStep() {
     return this.#step
   }
 
   setCount(newCount) {
     this.#count = newCount;
-    this.reset();
   }
 
   getCount() {
     return this.#count
   }
 
-  
-  setCountFromTime(time) {
-    this.reset();
+  reset() {
+    this.#count = this.#defaultCount;
+    this.#step = 1;
+    console.log("Timer reset")
+  }
+}
+
+class View {
+  constructor(id) {
+    this.display = document.getElementById(id);
+    this.screen = this.display.querySelector(".screen");
+  }
+
+  updateTime(time) {
+    this.screen.innerText = time;
+  }
+
+}
+
+class Timer {
+  #timerId;
+
+  beepAudio = new Audio("");
+
+  constructor(counter, view) {
+    this.hasStarted = false;
+    this.counter = counter;
+    this.view = view;
+    this.displayTime();
+  }
+
+  //Counter Decoration 
+  increment(timeUnit = "minute") {
+    this.changeBy(timeUnit);
+  }
+
+  decrement(timeUnit = "minute") {
+    this.changeBy(timeUnit, "decrement");
+  }
+
+  changeBy(timeUnit, sense = "increment") {
+    this.clearTimer();
+    let input = timeUnit == "hour" ? 3600 : timeUnit == "minute" ? 60 : 1;
+    if (sense === "increment") this.counter.incrementBy(input);
+    if (sense === "decrement") this.counter.decrementBy(input);
+    this.displayTime();
+
+  }
+
+  displayTime() {
+    this.view.updateTime(this.getTime())
+
+  }
+
+  secondsFromTime(time) {
 
     let timeRegExp = /^(?<hours>\d{1,2}):(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<seconds>\d{1,2})$/;
 
@@ -57,8 +109,9 @@ class Counter {
       if (hours) timerCountInSeconds += parseInt(hours) * 3600;
       if (minutes) timerCountInSeconds += parseInt(minutes) * 60;
       if (seconds) timerCountInSeconds += parseInt(seconds);
+
       //set #count in seconds
-      this.#count = timerCountInSeconds;
+      return timerCountInSeconds;
 
     } else {
       throw new Error("time format invalid !");
@@ -66,111 +119,13 @@ class Counter {
   }
 
   getTimerId() {
-    return this.#timerId
-  }
-  
-// observers 
-suscribe(observer) {
-  this.observers.push(observer)
-}
-
-unsuscribe(observer) {
-  this.observers = this.observers.filter(obs => obs != observer) 
-}
-  notifyCount() {
-  this.observers.forEach(obs => {obs.updateCount(this.getCount())
-  });
+    if (this.#timerId) return this.#timerId
+    throw new Error("Can't Find Timer ID");
   }
 
-  #beep(audio, duration = 5) {
-    try {
-      audio.play()
-      setTimeout(() => {
-        this.#stopBeep(audio);
-      }, duration * 1000);
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  #stopBeep(audio) {
-    audio.pause();
-    audio.currentTime = 0;
-  }
-  
-#warn() {
-  console.log("Warning !!!")
-}
-  start() {
-    this.remainingCount = this.#count;
-
-    this.#runTimer();
-  }
-
-  #runTimer() {
-    if (this.hasPaused) {
-      this.hasPaused = false;
-    }
-
-    this.#timerId = setInterval(() => {
-      this.remainingCount--;
-      this.notifyCount();
-      console.log(this.remainingCount)
-      if (this.remainingCount === 0) {
-        console.log("Time over")
-        this.#beep(this.beepAudio, 2);
-
-        clearInterval(this.#timerId);
-        this.#timerId = null;
-        this.hasFinished = true;
-      }
-      else if (this.remainingCount <= this.criticalCount && !this.hasWarned) {
-        this.#warn();
-        this.hasWarned = true;
-      }
-    }, 1000);
-    this.hasStarted = true;
-  }
-
-  pause() {
-    if (this.#timerId && !this.hasFinished) {
-      this.hasPaused = true;
-      console.log("Timer paused");
-      clearInterval(this.#timerId);
-      this.#timerId = null;
-    }
-  }
-
-  resume() {
-    if (this.hasPaused && !this.hasFinished) this.#runTimer()
-  }
-
-  reset() {
-    this.remainingCount = this.#count;
-    clearInterval(this.#timerId);
-    this.#timerId = null;
-    this.hasFinished = false;
-    this.hasStarted = false;
-    this.hasWarned = false;
-    this.hasPaused = false;
-
-    console.log("Timer cleared")
-  }
-}
-
-class View {
-  constructor(id) {
-    this.display = document.getElementById(id);
-    this.screen = this.display.querySelector(".screen");
-  }
-
-  updateCount(count) {
-    this.screen.innerText = this.getTime(count);
-  }
-  
-  getTime(count) {
+  getTime() {
     let timeFormatted = "";
-    let countProcessing = count;
+    let countProcessing = this.counter.getCount();
 
     if (countProcessing / 3600 >= 1) {
       let hours = Math.floor(countProcessing / 3600);
@@ -188,57 +143,108 @@ class View {
     return timeFormatted
   }
 
-}
-
-class Timer {
-  constructor(counter, view) {
-    this.counter = counter;
-    this.view = view;
-    this.initialize();
+  #beep(audio, duration = 5) {
+    try {
+      audio.play()
+      setTimeout(() => {
+        this.#stopBeep(audio);
+      }, duration * 1000);
+    } catch (e) {
+      console.error(e)
+    }
   }
 
-initialize() {
-  this.counter.suscribe(this.view);
-  this.counter.notifyCount();
-  console.log(this.view.screen,
-  this.counter.observers)
-}
+  #stopBeep(audio) {
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
+  #warn() {
+    console.log("Warning !!!")
+  }
 
   start() {
-    this.counter.start() //102196
+    if (!this.hasStarted) {
+      this.#runTimer()
+    } else {
+      console.log("Timer already started");
+    }
+  }
+
+  #runTimer() {
+    if (this.hasPaused) {
+      this.hasPaused = false;
+    }
+    if (!this.hasStarted) {
+      this.hasStarted = true;
+    }
+
+    this.#timerId = setInterval(() => {
+      this.counter.decrementBy(1);
+      this.displayTime();
+
+      if (this.counter.getCount() === 0) {
+        console.log("Time over")
+        this.#beep(this.beepAudio, 2);
+
+        this.clearTimer();
+        this.hasFinished = true;
+      }
+
+      else if (this.counter.getCount() <= this.criticalCount && !this.hasWarned) {
+        this.#warn();
+        this.hasWarned = true;
+      }
+    }, 1000);
+  }
+
+
+  pause() {
+    if (!this.hasFinished) {
+      this.hasPaused = true;
+      console.log("Timer paused");
+      this.clearTimer();
+    }
+  }
+
+  resume() {
+    if (this.hasPaused && !this.hasFinished) this.#runTimer()
+  }
+
+  clearTimer() {
+    if (this.#timerId) {
+      clearInterval(this.#timerId);
+      this.#timerId = null;
+    }
+  }
+
+  reset() {
+    this.counter.reset();
+    this.clearTimer();
+    this.displayTime();
+    this.hasStarted = false;
+    this.hasPaused = false;
+    this.hasWarned = false;
+    this.hasFinished = true;
   }
 }
 
-let count1 = new Counter(56000);
+let count1 = new Counter(0);
 
 let view1 = new View("timer");
 
-let timer1 = new Timer(count1, view1);
+let timer = new Timer(count1, view1);
 
 const inputTimeField = document.querySelector(".input-time");
 
 screen.addEventListener("dblclick", editTime)
 
-console.log(count1.getCount());
-
-//count1.start();
-//setTimeout(() => { count1.pause() }, 2000)
-//setTimeout(() => { count1.resume() }, 4000);
 
 //DOM
 function editTime() {
   //inputTimeField.value = this.innerText;
-console.log(inputTimeField);
+  console.log(inputTimeField);
 
   this.classList.add("hidden");
   inputTimeField.classList.remove("hidden");
 }
-
-//Controls 
-const startButton = 0;
-
-function putValueOnScreen(value) {
-  screen.innerText = value;
-}
-
-//putValueOnScreen("9:50");
