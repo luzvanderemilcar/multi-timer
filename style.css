@@ -1,0 +1,38 @@
+body {
+    font-size: 15pt;
+}
+
+button {
+  min-width: 22.5%;
+}
+
+#timer {
+  width:  7.5rem;
+  height: 7.5rem;
+  margin : auto;
+  border-radius: 50%;
+  background-color: darkgray;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 500;
+}
+
+.screen {
+  width: 100%;
+  text-align: center;
+}
+
+.controls {
+  margin-top: 30%;
+}
+
+.input-time {
+  width : 100% ;
+border: none;
+outline: none;
+}
+
+.hidden {
+  display: none;
+}
