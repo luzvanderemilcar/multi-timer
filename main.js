@@ -50,10 +50,7 @@ class Counter {
 class View {
   timerHTML = `
     <div class="display">
-    <div>
-    <p class="title"></p>
-   <hr>
-    </div>
+     <div class="title"></div>
       <div class="screen">
         <span class="hours time-unit" name="hours">00</span>:<span class="minutes time-unit" name="minutes">00</span>:<span class="seconds time-unit" name="seconds">50</span>
       </div>
@@ -64,9 +61,9 @@ class View {
       </div>
     </div>
     <div class="controls">
-      <div class="timing">
-        <button class="increment">Increment</button>
+      <div class="timing hidden">
         <button class="decrement">Decrement</button>
+        <button class="increment">Increment</button>
       </div>
       <div class="action">
         <button class="start-pause max-button" next="start">Start</button>
@@ -82,7 +79,7 @@ class View {
     this.timerDOM.setAttribute("id", id);
     this.timerDOM.classList.add("timer");
     this.title = this.timerDOM.querySelector(".title");
-    this.title.innerHTML = id;
+    this.title.innerHTML = `<p>${id}</p><hr/>`;
 
     //Timer display elements 
     this.display = this.timerDOM.querySelector(".display");
@@ -94,6 +91,7 @@ class View {
 
     //Timer control elements
     this.controls = this.timerDOM.querySelector(".controls");
+    this.timingControls = this.controls.querySelector(".timing");
 
     this.startPauseButton = this.controls.querySelector("button.start-pause");
     this.resetButton = this.controls.querySelector("button.reset");
@@ -120,6 +118,7 @@ class View {
   runningDisplay() {
     this.removeScreenHighLight();
     this.show(this.resetButton);
+    this.hideTimingControls();
     this.restoreStartPause();
   }
 
@@ -134,6 +133,14 @@ class View {
   show(element) {
     if (element.classList.contains("hidden")) element.classList.remove("hidden")
   }
+
+  hideTimingControls() {
+    this.hide(this.timingControls);
+  }
+  showTimingControls() {
+    this.show(this.timingControls);
+  }
+
   maximizeStartPause() {
     if (!this.startPauseButton.classList.contains("max-button")) this.startPauseButton.classList.add("max-button")
   }
@@ -165,6 +172,7 @@ class Timer {
     this.hasStarted = false;
     this.criticalCount = 15;
     this.counter = counter;
+
     this.view = view;
     this.displayTime();
 
@@ -204,6 +212,7 @@ class Timer {
 
       this.view.removeScreenHighLight();
       element.classList.add("highlight");
+      this.view.showTimingControls();
     }
     this.view.timeElements.forEach(elem => {
       elem.addEventListener("click", setScreenHighlight);
@@ -323,7 +332,6 @@ class Timer {
   }
 
   startPause() {
-    this.view.runningDisplay();
 
     if (!this.hasStarted) {
       this.#runTimer();
@@ -335,7 +343,8 @@ class Timer {
     else if (this.hasStarted) {
       this.#pause();
     }
-
+    this.view.hideTimingControls();
+    this.view.runningDisplay();
   }
 
   #runTimer() {
