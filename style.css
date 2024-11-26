@@ -9,7 +9,7 @@ body {
 
 
 .display {
-  width:  50%;
+  max-width:  70%;
   min-height: 50%;
   margin : auto;
   border-radius: 7.5%;
@@ -60,4 +60,8 @@ outline: none;
 
 .warning {
   color: red;
+}
+
+.highlight {
+  background-color: lightcyan;
 }

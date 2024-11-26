@@ -3,7 +3,7 @@ class Counter {
   #defaultCount;
   #step;
 
-  constructor(initialCount = 300) {
+  constructor(initialCount = 3600) {
     this.#defaultCount = initialCount;
     this.#count = initialCount;
     this.#step = 1;
@@ -55,9 +55,10 @@ class View {
    <hr>
     </div>
       <div class="screen">
-        <span class="minutes">00</span>:<span class="seconds">50</span>
+        <span class="hours time-unit" name="hours">00</span>:<span class="minutes time-unit" name="minutes">00</span>:<span class="seconds time-unit" name="seconds">50</span>
       </div>
       <div class="input-time" hidden>
+        <input class="hours hidden" type="number" name="hours" />
         <input class="minutes hidden" type="number" name="minutes" />
         <input class="seconds hidden" type="number" name="seconds" />
       </div>
@@ -73,42 +74,51 @@ class View {
       </div>
     </div>
   `;
-  
+
   constructor(id) {
     this.timerDOM = document.createElement("div");
-    
+
     this.timerDOM.innerHTML = this.timerHTML;
     this.timerDOM.setAttribute("id", id);
     this.timerDOM.classList.add("timer");
     this.title = this.timerDOM.querySelector(".title");
     this.title.innerHTML = id;
-    
+
     //Timer display elements 
     this.display = this.timerDOM.querySelector(".display");
-    
+    this.screen = this.display.querySelector(".screen");
+    this.hourElement = this.screen.querySelector("span.hours");
+    this.minuteElement = this.screen.querySelector("span.minutes");
+    this.secondElement = this.screen.querySelector("span.seconds");
+    this.timeElements = this.screen.querySelectorAll("span.time-unit");
+
     //Timer control elements
     this.controls = this.timerDOM.querySelector(".controls");
-    
-  this.screen = this.display.querySelector(".screen");
- 
-  this.startPauseButton = this.controls.querySelector("button.start-pause");
-  this.resetButton = this.controls.querySelector("button.reset");
-  
-  this.incrementButton = this.controls.querySelector("button.increment");
+
+    this.startPauseButton = this.controls.querySelector("button.start-pause");
+    this.resetButton = this.controls.querySelector("button.reset");
+
+    this.incrementButton = this.controls.querySelector("button.increment");
     this.decrementButton = this.controls.querySelector("button.decrement");
-    
+
     // Append
     document.body.append(this.timerDOM);
   }
 
-  updateTime(time) {
-    this.screen.innerText = time;
+  updateTime({ hoursFormatted, minutesFormatted, secondsFormatted }) {
+    this.hourElement.innerHTML = hoursFormatted;
+    this.minuteElement.innerHTML = minutesFormatted;
+    this.secondElement.innerHTML = secondsFormatted;
   }
-  
+
   reinitDisplay() {
     this.screen.classList.remove("warning");
   }
-
+  removeScreenHighLight() {
+      this.timeElements.forEach(elem => {
+        if (elem.classList.contains("highlight")) elem.classList.remove("highlight");
+      });
+    }
 }
 
 class Timer {
@@ -122,62 +132,75 @@ class Timer {
     this.counter = counter;
     this.view = view;
     this.displayTime();
-  
-   // this.increment = this.increment.bind(this);
+
+    // this.increment = this.increment.bind(this);
     this.addListeners();
   }
 
   //Counter Decoration 
-  increment(timeUnit = "minute") {
+  increment(timeUnit = "minutes") {
     this.changeBy(timeUnit);
   }
 
-  decrement(timeUnit = "minute") {
+  decrement(timeUnit = "minutes") {
     this.changeBy(timeUnit, "decrement");
   }
 
-// timeUnit = hour | minute | second
-// sense = increment | decrement 
-  changeBy(timeUnit, sense = "increment") {
+  // timeUnit = hours | minutes | seconds
+  // sense = increment | decrement 
+  changeBy(timeUnit = "minutes", sense = "increment") {
     this.clearTimer();
-    let input = timeUnit == "hour" ? 3600 : timeUnit == "minute" ? 60 : 1;
+    let input = timeUnit === "hours" ? 3600 : timeUnit === "seconds" ? 1 : 60;
     if (sense === "increment") this.counter.incrementBy(input);
     if (sense === "decrement") this.counter.decrementBy(input);
     this.displayTime();
     this.changeInnerHTML(this.view.startPauseButton, "Start");
     this.reinit();
   }
-  
+
   addListeners() {
+    // Screen
+    const setScreenHighlight = (e) => {
+      let element = e.target;
+      let timeUnit = element.getAttribute("name");
+
+      this.view.screen.setAttribute("highlight", timeUnit);
+
+      this.view.removeScreenHighLight();
+      element.classList.add("highlight");
+    }
+    this.view.timeElements.forEach(elem => {
+      elem.addEventListener("click", setScreenHighlight);
+    });
+
+    // controls 
     this.view.incrementButton.addEventListener("click", (e) => {
-  let button = e.target;
-  let timeUnit = button?.getAttribute("unit") ?? "minute";
-  this.increment(timeUnit);
-});
+      let timeUnit = this.view.screen.getAttribute("highlight");
+      this.increment(timeUnit);
+    });
 
-this.view.decrementButton.addEventListener("click", (e) => {
-  let button = e.target;
-  let timeUnit = button?.getAttribute("unit") ?? "minute";
-  this.decrement(timeUnit);
-});
+    this.view.decrementButton.addEventListener("click", (e) => {
+      let timeUnit = this.view.screen.getAttribute("highlight");
+      this.decrement(timeUnit);
+    });
 
-this.view.startPauseButton.addEventListener("click", ()=>{
-  this.startPause();
-});
-this.view.resetButton.addEventListener("click", () => {
-  this.reset();
-});
+    this.view.startPauseButton.addEventListener("click", () => {
+      this.startPause();
+    });
+    this.view.resetButton.addEventListener("click", () => {
+      this.reset();
+    });
   }
 
   displayTime() {
     this.view.updateTime(this.getTime())
   }
-  
-changeInnerHTML(element, htmlValue) {
-  element.innerHTML = htmlValue
-}
 
-secondsFromTime(time) {
+  changeInnerHTML(element, htmlValue) {
+    element.innerHTML = htmlValue
+  }
+
+  secondsFromTime(time) {
 
     let timeRegExp = /^(?<hours>\d{1,2}):(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<seconds>\d{1,2})$/;
 
@@ -207,22 +230,37 @@ secondsFromTime(time) {
 
   getTime() {
     let timeFormatted = "";
+    let hours, hoursFormatted, minutes, minutesFormatted, seconds, secondsFormatted;
+
     let countProcessing = this.counter.getCount();
 
     if (countProcessing / 3600 >= 1) {
-      let hours = Math.floor(countProcessing / 3600);
-      timeFormatted += `${hours<10 ? "0": ""}${hours}:`;
+      hours = Math.floor(countProcessing / 3600);
+      hoursFormatted = `${hours<10 ? "0": ""}${hours}`;
       countProcessing -= hours * 3600;
+    } else {
+      hoursFormatted = "00"
     }
+    timeFormatted += hoursFormatted + ":";
+
     if (countProcessing / 60 >= 1) {
-      let minutes = Math.floor(countProcessing / 60);
-      timeFormatted += `${minutes<10 ? "0": ""}${minutes}:`;
+      minutes = Math.floor(countProcessing / 60);
+      minutesFormatted = `${minutes<10 ? "0": ""}${minutes}`;
       countProcessing -= minutes * 60;
     } else {
-      timeFormatted += "00:"
+      minutesFormatted = "00"
     }
-    timeFormatted += `${countProcessing<10 ? "0": ""}${countProcessing}`;
-    return timeFormatted
+    timeFormatted += minutesFormatted + ":";
+
+    secondsFormatted = `${countProcessing<10 ? "0": ""}${countProcessing}`;
+
+    timeFormatted += secondsFormatted;
+    return {
+      timeFormatted,
+      hoursFormatted,
+      minutesFormatted,
+      secondsFormatted
+    }
   }
 
   #beep(audio, duration = 5) {
@@ -247,6 +285,8 @@ secondsFromTime(time) {
   }
 
   startPause() {
+    this.view.removeScreenHighLight();
+    
     if (!this.hasStarted) {
       this.#runTimer();
     }
@@ -255,9 +295,9 @@ secondsFromTime(time) {
       console.log("Timer already started");
     }
     else if (this.hasStarted) {
-  this.#pause();
+      this.#pause();
     }
-    
+
   }
 
   #runTimer() {
@@ -267,8 +307,8 @@ secondsFromTime(time) {
     if (!this.hasStarted) {
       this.hasStarted = true;
     }
-    
-this.changeInnerHTML(this.view.startPauseButton, "Pause");
+
+    this.changeInnerHTML(this.view.startPauseButton, "Pause");
 
     this.#timerId = setInterval(() => {
       this.counter.decrementBy(1);
@@ -318,15 +358,16 @@ this.changeInnerHTML(this.view.startPauseButton, "Pause");
     this.counter.reset();
     this.clearTimer();
     this.displayTime();
+    this.view.removeScreenHighLight();
     this.reinit();
     this.view.startPauseButton.innerText = "Start";
   }
-  
+
   reinit() {
     this.hasStarted = false;
     this.hasPaused = false;
     this.hasWarned = false;
-    this.hasFinished = true;
+    this.hasFinished = null;
     this.view.reinitDisplay()
   }
 }
