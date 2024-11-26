@@ -3,7 +3,7 @@ class Counter {
   #defaultCount;
   #step;
 
-  constructor(initialCount = 3600) {
+  constructor(initialCount = 300) {
     this.#defaultCount = initialCount;
     this.#count = initialCount;
     this.#step = 1;
@@ -64,13 +64,13 @@ class View {
       </div>
     </div>
     <div class="controls">
-      <div>
+      <div class="timing">
         <button class="increment">Increment</button>
         <button class="decrement">Decrement</button>
       </div>
-      <div>
-        <button class="start-pause">Start</button>
-        <button class="reset">Reset</button>
+      <div class="action">
+        <button class="start-pause max-button" next="start">Start</button>
+        <button class="reset hidden">Reset</button>
       </div>
     </div>
   `;
@@ -113,18 +113,53 @@ class View {
 
   reinitDisplay() {
     this.screen.classList.remove("warning");
+    this.maximizeStartPause();
+    this.hide(this.resetButton);
   }
+
+  runningDisplay() {
+    this.removeScreenHighLight();
+    this.show(this.resetButton);
+    this.restoreStartPause();
+  }
+
   removeScreenHighLight() {
-      this.timeElements.forEach(elem => {
-        if (elem.classList.contains("highlight")) elem.classList.remove("highlight");
-      });
-    }
+    this.timeElements.forEach(elem => {
+      if (elem.classList.contains("highlight")) elem.classList.remove("highlight");
+    });
+  }
+  hide(element) {
+    if (!element.classList.contains("hidden")) element.classList.add("hidden")
+  }
+  show(element) {
+    if (element.classList.contains("hidden")) element.classList.remove("hidden")
+  }
+  maximizeStartPause() {
+    if (!this.startPauseButton.classList.contains("max-button")) this.startPauseButton.classList.add("max-button")
+  }
+  restoreStartPause() {
+    if (this.startPauseButton.classList.contains("max-button")) this.startPauseButton.classList.remove("max-button")
+  }
+
+  startPauseNext(action) {
+    if (["start", "resume", "pause"].includes(action))
+      this.startPauseButton.setAttribute("next", action);
+
+    this.startPauseButton.innerHTML = capitalCase(action);
+
+  }
+}
+
+function capitalCase(text) {
+  return text.replace(/^(?<first>\w)/, (match, first, index, groups) => {
+    return first.toUpperCase();
+  })
 }
 
 class Timer {
   #timerId;
 
-  beepAudio = new Audio("");
+  beepAudio = new Audio("/clock_sound_effect_beeping.mp3");
 
   constructor(counter, view) {
     this.hasStarted = false;
@@ -155,6 +190,7 @@ class Timer {
     if (sense === "decrement") this.counter.decrementBy(input);
     this.displayTime();
     this.changeInnerHTML(this.view.startPauseButton, "Start");
+    this.view.startPauseButton.setAttribute("next", "start");
     this.reinit();
   }
 
@@ -265,7 +301,9 @@ class Timer {
 
   #beep(audio, duration = 5) {
     try {
-      audio.play()
+      audio.play();
+      audio.loop = true;
+
       setTimeout(() => {
         this.#stopBeep(audio);
       }, duration * 1000);
@@ -285,8 +323,8 @@ class Timer {
   }
 
   startPause() {
-    this.view.removeScreenHighLight();
-    
+    this.view.runningDisplay();
+
     if (!this.hasStarted) {
       this.#runTimer();
     }
@@ -301,22 +339,13 @@ class Timer {
   }
 
   #runTimer() {
-    if (this.hasPaused) {
-      this.hasPaused = false;
-    }
-    if (!this.hasStarted) {
-      this.hasStarted = true;
-    }
-
-    this.changeInnerHTML(this.view.startPauseButton, "Pause");
-
     this.#timerId = setInterval(() => {
       this.counter.decrementBy(1);
       this.displayTime();
 
       if (this.counter.getCount() === 0) {
         console.log("Time over")
-        this.#beep(this.beepAudio, 2);
+        this.#beep(this.beepAudio, 10);
 
         this.clearTimer();
         this.hasFinished = true;
@@ -327,14 +356,22 @@ class Timer {
         this.hasWarned = true;
       }
     }, 1000);
-  }
 
+    this.view.startPauseNext("pause");
+
+    if (this.hasPaused) {
+      this.hasPaused = false;
+    }
+    if (!this.hasStarted) {
+      this.hasStarted = true;
+    }
+  }
 
   #pause() {
     if (!this.hasFinished) {
       this.hasPaused = true;
       console.log("Timer paused");
-      this.changeInnerHTML(this.view.startPauseButton, "Resume");
+      this.view.startPauseNext("resume");
       this.clearTimer();
     }
   }
@@ -342,7 +379,7 @@ class Timer {
   #resume() {
     if (this.hasPaused && !this.hasFinished) {
       this.#runTimer();
-      this.changeInnerHTML(this.view.startPauseButton, "Pause");
+      this.view.startPauseNext("pause");
       console.log("Timer resumed")
     }
   }
@@ -357,10 +394,11 @@ class Timer {
   reset() {
     this.counter.reset();
     this.clearTimer();
+    this.reinit();
+
     this.displayTime();
     this.view.removeScreenHighLight();
-    this.reinit();
-    this.view.startPauseButton.innerText = "Start";
+    this.view.startPauseNext("start");
   }
 
   reinit() {
@@ -370,6 +408,10 @@ class Timer {
     this.hasFinished = null;
     this.view.reinitDisplay()
   }
+}
+
+function hide(element) {
+  if (!element.classList.contains("hidden")) element.classList.add("hidden")
 }
 
 let count1 = new Counter();
