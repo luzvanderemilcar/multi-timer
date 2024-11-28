@@ -1,4 +1,6 @@
 class Counter {
+  static idArray = [];
+  #id;
   #count;
   #defaultCount;
   #step;
@@ -7,6 +9,11 @@ class Counter {
     this.#defaultCount = initialCount;
     this.#count = initialCount;
     this.#step = 1;
+    this.#id = generateUniqueId(Counter.idArray);
+  }
+
+  getCounterId() {
+    return this.#id;
   }
 
   increment() {
@@ -47,10 +54,39 @@ class Counter {
   }
 }
 
+class MiniView {
+  miniTimerHTML = `
+      <p class="title">timer</p>
+      <p class="time"></p>
+  `;
+  constructor() {
+    this.viewIsNormal = false;
+  }
+
+  initView() {
+    this.miniTimerElement = document.createElement("div");
+
+    this.miniTimerElement.innerHTML = this.miniTimerHTML;
+    this.miniTimerElement.setAttribute("id", this.id);
+    this.miniTimerElement.classList.add("timer-preview");
+    this.title = this.miniTimerElement.querySelector(".title");
+    this.miniTimeElement = this.miniTimerElement.querySelector(".time");
+    document.querySelector(".timer-list").append(this.miniTimerElement);
+  }
+
+  updateTime({ timeFormatted }) {
+    this.miniTimeElement.innerHTML = timeFormatted;
+  }
+  changeTitle(newTitle) {
+    this.title.innerHTML = newTitle;
+  }
+}
+
 class View {
   timerHTML = `
     <div class="display">
      <div class="title"></div>
+     <input class="title" hidden type="text" name="title" />
       <div class="screen">
         <span class="hours time-unit" name="hours">00</span>:<span class="minutes time-unit" name="minutes">00</span>:<span class="seconds time-unit" name="seconds">50</span>
       </div>
@@ -72,25 +108,33 @@ class View {
     </div>
   `;
 
-  constructor(id) {
-    this.timerDOM = document.createElement("div");
+  constructor() {
+    this.viewIsNormal = true;
+  }
 
-    this.timerDOM.innerHTML = this.timerHTML;
-    this.timerDOM.setAttribute("id", id);
-    this.timerDOM.classList.add("timer");
-    this.title = this.timerDOM.querySelector(".title");
-    this.title.innerHTML = `<p>${id}</p><hr/>`;
+
+  initView() {
+    this.timerElement = document.createElement("div");
+
+    this.timerElement.innerHTML = this.timerHTML;
+
+    this.timerElement.classList.add("timer");
+    this.titleElement = this.timerElement.querySelector(".title");
+    this.titleElement.innerHTML = `<p>timer</p><hr/>`;
 
     //Timer display elements 
-    this.display = this.timerDOM.querySelector(".display");
-    this.screen = this.display.querySelector(".screen");
+    this.displayElement = this.timerElement.querySelector(".display");
+    this.screen = this.displayElement.querySelector(".screen");
+    this.titleElement = this.screen.querySelector(".title");
+    this.titleElement = this.screen.querySelector("input.title");
+
     this.hourElement = this.screen.querySelector("span.hours");
     this.minuteElement = this.screen.querySelector("span.minutes");
     this.secondElement = this.screen.querySelector("span.seconds");
     this.timeElements = this.screen.querySelectorAll("span.time-unit");
 
     //Timer control elements
-    this.controls = this.timerDOM.querySelector(".controls");
+    this.controls = this.timerElement.querySelector(".controls");
     this.timingControls = this.controls.querySelector(".timing");
 
     this.startPauseButton = this.controls.querySelector("button.start-pause");
@@ -98,9 +142,16 @@ class View {
 
     this.incrementButton = this.controls.querySelector("button.increment");
     this.decrementButton = this.controls.querySelector("button.decrement");
+    
+   /* let oldTimerElement = document.body.querySelector(".timer");
+if (oldTimerElement) document.body.removeChild(oldTimerElement);
+*/
+// Append
+document.body.appendChild(this.timerElement);
+  }
 
-    // Append
-    document.body.append(this.timerDOM);
+  changeTitle(newTitle) {
+    this.title.innerHTML = `<p>${newTitle}</p><hr/>`;
   }
 
   updateTime({ hoursFormatted, minutesFormatted, secondsFormatted }) {
@@ -165,19 +216,61 @@ function capitalCase(text) {
 
 class Timer {
   #timerId;
-
+  
   beepAudio = new Audio("/clock_sound_effect_beeping.mp3");
 
   constructor(counter, view) {
     this.hasStarted = false;
     this.criticalCount = 15;
     this.counter = counter;
+    currentCounter = counter;
+    console.log(currentCounter);
 
     this.view = view;
+    this.view.initView();
     this.displayTime();
-
-    // this.increment = this.increment.bind(this);
     this.addListeners();
+  }
+
+  changeView(newView) {
+    //Remove listendr from old view
+    //this.removeListeners();
+    
+    if (this.view.viewIsNormal) {
+   document.body.removeChild(this.view.timerElement);
+    } else {
+      document.querySelector(".timer-list").removeChild(this.view.miniTimerElement);
+    }
+    
+    this.view = newView;
+    this.view.initView();
+    this.updateView();
+  }
+
+  updateView() {
+    this.displayTime();
+    this.addListeners();
+    
+    // Update view according to Timer state
+    if (this.view.viewIsNormal) {
+      if (this.hasStarted && this.hasPaused) {
+        this.view.restoreStartPause();
+        this.view.startPauseNext("resume");
+
+      }
+      else if (this.hasStarted & !this.hasFinished) {
+        this.view.runningDisplay();
+        this.view.startPauseNext("pause");
+      }
+
+      else if (!this.hasStarted) {
+        this.view.reinitDisplay();
+        this.view.startPauseNext("start");
+      }
+    }
+    if (this.hasWarned) {
+      this.#warn;
+    }
   }
 
   //Counter Decoration 
@@ -197,45 +290,53 @@ class Timer {
     if (sense === "increment") this.counter.incrementBy(input);
     if (sense === "decrement") this.counter.decrementBy(input);
     this.displayTime();
-    this.changeInnerHTML(this.view.startPauseButton, "Start");
     this.view.startPauseButton.setAttribute("next", "start");
     this.reinit();
   }
 
   addListeners() {
-    // Screen
-    const setScreenHighlight = (e) => {
-      let element = e.target;
-      let timeUnit = element.getAttribute("name");
+    if (this.view.viewIsNormal) {
+      // Screen
+      const setScreenHighlight = (e) => {
+        let element = e.target;
+        let timeUnit = element.getAttribute("name");
 
-      this.view.screen.setAttribute("highlight", timeUnit);
+        this.view.screen.setAttribute("highlight", timeUnit);
 
-      this.view.removeScreenHighLight();
-      element.classList.add("highlight");
-      this.view.showTimingControls();
+        this.view.removeScreenHighLight();
+        element.classList.add("highlight");
+        this.view.showTimingControls();
+      }
+      this.view.timeElements.forEach(elem => {
+        elem.addEventListener("dblclick", setScreenHighlight);
+      });
+
+      // controls 
+      this.view.incrementButton.addEventListener("click", (e) => {
+        let timeUnit = this.view.screen.getAttribute("highlight");
+        this.increment(timeUnit);
+      });
+
+      this.view.decrementButton.addEventListener("click", (e) => {
+        let timeUnit = this.view.screen.getAttribute("highlight");
+        this.decrement(timeUnit);
+      });
+
+      this.view.startPauseButton.addEventListener("click", () => {
+        this.startPause();
+      });
+      this.view.resetButton.addEventListener("click", () => {
+        this.reset();
+      });
+    } else {
+      this.view.miniTimerElement.addEventListener("click", this.maximizeView)
     }
-    this.view.timeElements.forEach(elem => {
-      elem.addEventListener("click", setScreenHighlight);
-    });
-
-    // controls 
-    this.view.incrementButton.addEventListener("click", (e) => {
-      let timeUnit = this.view.screen.getAttribute("highlight");
-      this.increment(timeUnit);
-    });
-
-    this.view.decrementButton.addEventListener("click", (e) => {
-      let timeUnit = this.view.screen.getAttribute("highlight");
-      this.decrement(timeUnit);
-    });
-
-    this.view.startPauseButton.addEventListener("click", () => {
-      this.startPause();
-    });
-    this.view.resetButton.addEventListener("click", () => {
-      this.reset();
-    });
   }
+  
+maximizeView = () => {
+    this.changeView(view1);
+}
+
 
   displayTime() {
     this.view.updateTime(this.getTime())
@@ -328,7 +429,11 @@ class Timer {
 
   #warn() {
     console.log("Warning !!!");
-    this.view.screen.classList.add("warning");
+    if (this.view.viewIsNormal) {
+      this.view.screen.classList.add("warning");
+    } else {
+      this.view.miniScreen.classList.add("warning");
+    }
   }
 
   startPause() {
@@ -343,11 +448,14 @@ class Timer {
     else if (this.hasStarted) {
       this.#pause();
     }
-    this.view.hideTimingControls();
-    this.view.runningDisplay();
+    if (this.view.viewIsNormal) {
+      this.view.hideTimingControls();
+      this.view.runningDisplay();
+    }
   }
 
   #runTimer() {
+
     this.#timerId = setInterval(() => {
       this.counter.decrementBy(1);
       this.displayTime();
@@ -366,21 +474,16 @@ class Timer {
       }
     }, 1000);
 
-    this.view.startPauseNext("pause");
-
-    if (this.hasPaused) {
-      this.hasPaused = false;
-    }
-    if (!this.hasStarted) {
-      this.hasStarted = true;
-    }
+    if (this.hasPaused) this.hasPaused = false;
+    if (!this.hasStarted) this.hasStarted = true;
+    if (this.view.viewIsNormal) this.view.startPauseNext("pause");
   }
 
   #pause() {
     if (!this.hasFinished) {
       this.hasPaused = true;
       console.log("Timer paused");
-      this.view.startPauseNext("resume");
+      if (this.view.viewIsNormal) this.view.startPauseNext("resume");
       this.clearTimer();
     }
   }
@@ -388,7 +491,7 @@ class Timer {
   #resume() {
     if (this.hasPaused && !this.hasFinished) {
       this.#runTimer();
-      this.view.startPauseNext("pause");
+      if (this.view.viewIsNormal) this.view.startPauseNext("pause");
       console.log("Timer resumed")
     }
   }
@@ -406,16 +509,19 @@ class Timer {
     this.reinit();
 
     this.displayTime();
-    this.view.removeScreenHighLight();
-    this.view.startPauseNext("start");
+    if (this.view.viewIsNormal) {
+      this.view.removeScreenHighLight();
+      this.view.startPauseNext("start");
+    }
   }
 
   reinit() {
     this.hasStarted = false;
     this.hasPaused = false;
     this.hasWarned = false;
-    this.hasFinished = null;
-    this.view.reinitDisplay()
+    this.hasFinished = false;
+    
+    if (this.view.viewIsNormal) this.view.reinitDisplay();
   }
 }
 
@@ -423,11 +529,6 @@ function hide(element) {
   if (!element.classList.contains("hidden")) element.classList.add("hidden")
 }
 
-let count1 = new Counter();
-
-let view1 = new View("timer1");
-
-let timer = new Timer(count1, view1);
 
 const inputTimeField = document.querySelector(".input-time");
 
@@ -441,4 +542,49 @@ function editTime() {
 
   this.classList.add("hidden");
   inputTimeField.classList.remove("hidden");
+}
+
+const counters = [];
+let currentCounter;
+
+let count1 = new Counter(30);
+
+let view1 = new View("timer1");
+let minView1 = new MiniView()
+
+const timer = new Timer(count1, view1);
+
+setTimeout(() => { timer.changeView(minView1) }, 3000)
+//setTimeout(() => { timer.changeView(new MiniView()) }, 5000)
+
+// Dom elements
+const timerList = document.querySelector(".timer-list");
+const addTimer = document.querySelector(".add-timer");
+
+addTimer.addEventListener("click", setNewCounter);
+
+function saveCurrentCounter() {
+  counters.push(currentCounter);
+}
+
+function setNewCounter() {
+  if (askToSaveCounter()) saveCurrentCounter();
+  timer.setCounter();
+}
+
+function askToSaveCounter() {
+  let answer = prompt(`Save the timer ?
+  Type y for yes and n for no`);
+
+  return answer.trim().toLowerCase() === "y" ? true : false
+}
+
+function generateUniqueId(idArray, maxId = 1000000) {
+  let id;
+  while (!id) {
+    let candidateId = Math.floor(Math.random() * maxId) + 1;
+    if (!idArray.includes(candidateId)) id = candidateId;
+  }
+  idArray.push(id);
+  return id
 }

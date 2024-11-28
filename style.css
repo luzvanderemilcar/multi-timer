@@ -3,6 +3,17 @@ body {
   height: 100vh;
 }
 
+.details {
+    display : grid;
+    grid-column-gap: 5px ;
+  grid-template-columns: 4fr 1fr;
+  grid-template-rows:  1fr;
+  grid-template-areas:
+  "timerlist addtimer";
+  justify-items: center;
+  align-items: center;
+}
+
 .timer {
   margin-top: 25px;
   padding-top: 5px;
@@ -34,6 +45,7 @@ body {
 
 .title {
   font-size: 0.75rem;
+  margin: 0 auto;
 }
 
 .title hr {
@@ -84,6 +96,7 @@ body {
 
 .controls button {
   border-radius: 15px;
+  width: 40%;
   min-height: 50px;
   min-width: 70px;
   border: none;
@@ -113,7 +126,7 @@ button.decrement {
 }
 
 .max-button {
-  width: 75%;
+  width: 75% !important;
   font-size: 1.5rem;
 }
 
@@ -133,4 +146,54 @@ button.decrement {
 
 .highlight {
   background-color: darkgray;
+}
+
+.timer-list {
+  display: flex;
+  justify-content: space-around ;
+  align-items: center;
+  overflow-x: scroll;
+  width : 100%;
+  padding: 5px;
+  grid-area: timerlist;
+  background-color : #F0F0F5;
+}
+
+.timer-list .timer-preview {
+  height: 75%;
+  padding: 5px;
+  margin-inline: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  background-color: beige;
+  border-radius: 15px;
+}
+
+.timer-preview .time {
+  font-size: .75;
+  margin : 0;
+}
+
+.add-timer {
+  grid-area: addtimer;
+ /* position: fixed;*/
+  right: 7.5%;
+  bottom: 5%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: lightgray;
+  color: darkblue;
+  font-size: 3rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+}
+
+@media (max-height: 200px) {
+.details {
+  display: none;
+}
 }
