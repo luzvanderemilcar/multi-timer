@@ -4,12 +4,12 @@ body {
 }
 
 .details {
-    display : grid;
-    grid-column-gap: 5px ;
+  display: grid;
+  grid-column-gap: 5px;
   grid-template-columns: 4fr 1fr;
-  grid-template-rows:  1fr;
+  grid-template-rows: 1fr;
   grid-template-areas:
-  "timerlist addtimer";
+    "timerlist addtimer";
   justify-items: center;
   align-items: center;
 }
@@ -48,8 +48,18 @@ body {
   margin: 0 auto;
 }
 
+div.title p {
+  display: inherit;
+}
+
 .title hr {
   margin: 0;
+}
+
+/* Input title */
+input.title {
+  background-color: #E9E9E9;
+  text-align: center;
 }
 
 .screen {
@@ -150,13 +160,13 @@ button.decrement {
 
 .timer-list {
   display: flex;
-  justify-content: space-around ;
+  justify-content: space-around;
   align-items: center;
   overflow-x: scroll;
-  width : 100%;
+  width: 100%;
   padding: 5px;
   grid-area: timerlist;
-  background-color : #F0F0F5;
+  background-color: #F0F0F5;
 }
 
 .timer-list .timer-preview {
@@ -173,12 +183,12 @@ button.decrement {
 
 .timer-preview .time {
   font-size: .75;
-  margin : 0;
+  margin: 0;
 }
 
 .add-timer {
   grid-area: addtimer;
- /* position: fixed;*/
+  /* position: fixed;*/
   right: 7.5%;
   bottom: 5%;
   display: flex;
@@ -193,7 +203,7 @@ button.decrement {
 }
 
 @media (max-height: 200px) {
-.details {
-  display: none;
-}
+  .details {
+    display: none;
+  }
 }

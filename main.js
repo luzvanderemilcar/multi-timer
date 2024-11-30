@@ -69,7 +69,7 @@ class MiniView {
     this.miniTimerElement.innerHTML = this.miniTimerHTML;
     this.miniTimerElement.setAttribute("id", this.id);
     this.miniTimerElement.classList.add("timer-preview");
-    this.title = this.miniTimerElement.querySelector(".title");
+    this.titleElement = this.miniTimerElement.querySelector(".title");
     this.miniTimeElement = this.miniTimerElement.querySelector(".time");
     document.querySelector(".timer-list").append(this.miniTimerElement);
   }
@@ -78,19 +78,19 @@ class MiniView {
     this.miniTimeElement.innerHTML = timeFormatted;
   }
   changeTitle(newTitle) {
-    this.title.innerHTML = newTitle;
+    this.titleElement.innerHTML = newTitle;
   }
 }
 
 class View {
-  timerHTML = `
+  static timerHTML = `
     <div class="display">
      <div class="title"></div>
-     <input class="title" hidden type="text" name="title" />
+     <input class="title hidden" type="text" name="title" maxlength=15 pattern=".{,15}" title="timer name should be at most 15 character long"/>
       <div class="screen">
         <span class="hours time-unit" name="hours">00</span>:<span class="minutes time-unit" name="minutes">00</span>:<span class="seconds time-unit" name="seconds">50</span>
       </div>
-      <div class="input-time" hidden>
+      <div class="input-time hidden" >
         <input class="hours hidden" type="number" name="hours" />
         <input class="minutes hidden" type="number" name="minutes" />
         <input class="seconds hidden" type="number" name="seconds" />
@@ -107,6 +107,13 @@ class View {
       </div>
     </div>
   `;
+  
+  //implement singleton for view
+static #mainView;
+static getView() {
+  if (!View.#mainView) View.#mainView = new View();
+  return View.#mainView;
+}
 
   constructor() {
     this.viewIsNormal = true;
@@ -116,17 +123,19 @@ class View {
   initView() {
     this.timerElement = document.createElement("div");
 
-    this.timerElement.innerHTML = this.timerHTML;
+    this.timerElement.innerHTML = View.timerHTML;
 
     this.timerElement.classList.add("timer");
-    this.titleElement = this.timerElement.querySelector(".title");
-    this.titleElement.innerHTML = `<p>timer</p><hr/>`;
 
     //Timer display elements 
     this.displayElement = this.timerElement.querySelector(".display");
     this.screen = this.displayElement.querySelector(".screen");
-    this.titleElement = this.screen.querySelector(".title");
-    this.titleElement = this.screen.querySelector("input.title");
+    
+    this.titleElement = this.displayElement.querySelector("div.title");
+    
+    this.titleElement.innerHTML = `<p>timer</p><hr/>`;
+    
+    this.inputTitleElement = this.displayElement.querySelector("input.title");
 
     this.hourElement = this.screen.querySelector("span.hours");
     this.minuteElement = this.screen.querySelector("span.minutes");
@@ -143,15 +152,12 @@ class View {
     this.incrementButton = this.controls.querySelector("button.increment");
     this.decrementButton = this.controls.querySelector("button.decrement");
     
-   /* let oldTimerElement = document.body.querySelector(".timer");
-if (oldTimerElement) document.body.removeChild(oldTimerElement);
-*/
 // Append
 document.body.appendChild(this.timerElement);
   }
 
   changeTitle(newTitle) {
-    this.title.innerHTML = `<p>${newTitle}</p><hr/>`;
+    this.titleElement.innerHTML = `<p>${newTitle}</p><hr/>`;
   }
 
   updateTime({ hoursFormatted, minutesFormatted, secondsFormatted }) {
@@ -219,19 +225,23 @@ class Timer {
   
   beepAudio = new Audio("/clock_sound_effect_beeping.mp3");
 
-  constructor(counter, view) {
+  constructor(counter, view, title="timer") {
     this.hasStarted = false;
     this.criticalCount = 15;
     this.counter = counter;
     currentCounter = counter;
-    console.log(currentCounter);
 
     this.view = view;
     this.view.initView();
+    this.changeTitle(title);
     this.displayTime();
     this.addListeners();
   }
-
+  
+changeTitle(newTitle) {
+if (newTitle?.length > 0) this.title = newTitle;
+  this.view.changeTitle(this.title);
+}
   changeView(newView) {
     //Remove listendr from old view
     //this.removeListeners();
@@ -249,6 +259,7 @@ class Timer {
 
   updateView() {
     this.displayTime();
+    this.changeTitle();
     this.addListeners();
     
     // Update view according to Timer state
@@ -296,6 +307,30 @@ class Timer {
 
   addListeners() {
     if (this.view.viewIsNormal) {
+    
+    
+   this.view.titleElement.addEventListener("dblclick", (e) => {
+      let titleElement = e.target;
+      
+      titleElement.classList.add("hidden");
+      
+      this.view.inputTitleElement.value = titleElement.innerText;
+      this.view.inputTitleElement.classList.remove("hidden");
+      this.view.inputTitleElement.focus();
+    });
+    
+    
+    this.view.inputTitleElement.addEventListener("blur", (e) =>{
+    let value = e.target.value.trim();
+      if (value?.length>0 ) {
+      this.changeTitle(value);
+      }
+      
+      e.target.classList.add("hidden");
+      this.view.titleElement.classList.remove("hidden");
+      this.view.titleElement.querySelector("p").classList.remove("hidden");
+    });
+    
       // Screen
       const setScreenHighlight = (e) => {
         let element = e.target;
@@ -329,12 +364,16 @@ class Timer {
         this.reset();
       });
     } else {
-      this.view.miniTimerElement.addEventListener("click", this.maximizeView)
+      this.view.miniTimerElement.addEventListener("click", this.maximizeView);
     }
   }
   
 maximizeView = () => {
-    this.changeView(view1);
+    this.changeView(View.getView());
+}
+
+restoreView = () => {
+  this.changeView(new miniView());
 }
 
 
@@ -549,12 +588,12 @@ let currentCounter;
 
 let count1 = new Counter(30);
 
-let view1 = new View("timer1");
+let view1 = new View();
 let minView1 = new MiniView()
 
-const timer = new Timer(count1, view1);
+const timer = new Timer(count1, View.getView());
 
-setTimeout(() => { timer.changeView(minView1) }, 3000)
+setTimeout(() => { timer.changeView(minView1) }, 7000)
 //setTimeout(() => { timer.changeView(new MiniView()) }, 5000)
 
 // Dom elements
