@@ -60,7 +60,8 @@ class MiniView {
       <p class="time"></p>
   `;
   constructor() {
-    this.viewIsNormal = false;
+    this.viewIsMaximum = false;
+    this.initView();
   }
 
   initView() {
@@ -70,12 +71,21 @@ class MiniView {
     this.miniTimerElement.setAttribute("id", this.id);
     this.miniTimerElement.classList.add("timer-preview");
     this.titleElement = this.miniTimerElement.querySelector(".title");
-    this.miniTimeElement = this.miniTimerElement.querySelector(".time");
+    this.miniScreenElement = this.miniTimerElement.querySelector(".time");
+    this.mount();
+    this.isInitialized = true;
+  }
+
+  mount() {
     document.querySelector(".timer-list").append(this.miniTimerElement);
   }
 
+  unmount() {
+    document.querySelector(".timer-list").removeChild(this.miniTimerElement);
+  }
+
   updateTime({ timeFormatted }) {
-    this.miniTimeElement.innerHTML = timeFormatted;
+    this.miniScreenElement.innerHTML = timeFormatted;
   }
   changeTitle(newTitle) {
     this.titleElement.innerHTML = newTitle;
@@ -107,16 +117,11 @@ class View {
       </div>
     </div>
   `;
-  
-  //implement singleton for view
-static #mainView;
-static getView() {
-  if (!View.#mainView) View.#mainView = new View();
-  return View.#mainView;
-}
 
   constructor() {
-    this.viewIsNormal = true;
+    this.viewIsMaximum = true;
+    this.activeTimer = document.querySelector(".timer");
+    this.initView();
   }
 
 
@@ -130,11 +135,11 @@ static getView() {
     //Timer display elements 
     this.displayElement = this.timerElement.querySelector(".display");
     this.screen = this.displayElement.querySelector(".screen");
-    
+
     this.titleElement = this.displayElement.querySelector("div.title");
-    
+
     this.titleElement.innerHTML = `<p>timer</p><hr/>`;
-    
+
     this.inputTitleElement = this.displayElement.querySelector("input.title");
 
     this.hourElement = this.screen.querySelector("span.hours");
@@ -151,9 +156,23 @@ static getView() {
 
     this.incrementButton = this.controls.querySelector("button.increment");
     this.decrementButton = this.controls.querySelector("button.decrement");
-    
-// Append
-document.body.appendChild(this.timerElement);
+
+    this.mount();
+    this.isInitialized = true;
+  }
+
+  // Append
+
+  mount() {
+    let hasActiveTimer = document.querySelector(".timer");
+    if (hasActiveTimer) {
+      document.body.removeChild(hasActiveTimer);
+    }
+    document.body.appendChild(this.timerElement);
+  }
+
+  unmount() {
+    document.body.removeChild(this.timerElement);
   }
 
   changeTitle(newTitle) {
@@ -222,48 +241,56 @@ function capitalCase(text) {
 
 class Timer {
   #timerId;
-  
+
   beepAudio = new Audio("/clock_sound_effect_beeping.mp3");
 
-  constructor(counter, view, title="timer") {
+  constructor(count = 300, title = "timer") {
+    this.maximumView = new View();
+    this.view = this.maximumView;
+
+    this.counter = new Counter(count);
     this.hasStarted = false;
     this.criticalCount = 15;
-    this.counter = counter;
-    currentCounter = counter;
 
-    this.view = view;
-    this.view.initView();
     this.changeTitle(title);
     this.displayTime();
     this.addListeners();
   }
-  
-changeTitle(newTitle) {
-if (newTitle?.length > 0) this.title = newTitle;
-  this.view.changeTitle(this.title);
-}
-  changeView(newView) {
-    //Remove listendr from old view
-    //this.removeListeners();
-    
-    if (this.view.viewIsNormal) {
-   document.body.removeChild(this.view.timerElement);
+
+  changeTitle(newTitle) {
+    if (newTitle?.length > 0) this.title = newTitle;
+    this.view.changeTitle(this.title);
+  }
+  changeView() {
+    //Remove the old view from DOM
+    this.view.unmount();
+// if the old view is maximum
+    if (this.view.viewIsMaximum) {
+      if (this.minimumView) {
+        this.view = this.minimumView;
+        this.view.mount();
+      } else {
+        this.view = new MiniView();
+        this.addListeners();
+      }
     } else {
-      document.querySelector(".timer-list").removeChild(this.view.miniTimerElement);
+      if (this.maximumView) {
+        this.view = this.maximumView;
+        this.view.mount();
+      } else {
+        this.view = new View();
+        this.addListeners();
+      }
     }
-    
-    this.view = newView;
-    this.view.initView();
     this.updateView();
   }
 
   updateView() {
     this.displayTime();
     this.changeTitle();
-    this.addListeners();
-    
+
     // Update view according to Timer state
-    if (this.view.viewIsNormal) {
+    if (this.view.viewIsMaximum) {
       if (this.hasStarted && this.hasPaused) {
         this.view.restoreStartPause();
         this.view.startPauseNext("resume");
@@ -306,31 +333,31 @@ if (newTitle?.length > 0) this.title = newTitle;
   }
 
   addListeners() {
-    if (this.view.viewIsNormal) {
+    if (this.view.viewIsMaximum) {
     
-    
-   this.view.titleElement.addEventListener("dblclick", (e) => {
-      let titleElement = e.target;
-      
-      titleElement.classList.add("hidden");
-      
-      this.view.inputTitleElement.value = titleElement.innerText;
-      this.view.inputTitleElement.classList.remove("hidden");
-      this.view.inputTitleElement.focus();
-    });
-    
-    
-    this.view.inputTitleElement.addEventListener("blur", (e) =>{
-    let value = e.target.value.trim();
-      if (value?.length>0 ) {
-      this.changeTitle(value);
-      }
-      
-      e.target.classList.add("hidden");
-      this.view.titleElement.classList.remove("hidden");
-      this.view.titleElement.querySelector("p").classList.remove("hidden");
-    });
-    
+    // Double tap the title to edit it when the timer's maximum
+      this.view.titleElement.addEventListener("dblclick", (e) => {
+        let titleElement = e.target;
+
+        titleElement.classList.add("hidden");
+// catch the current value and assign if for modifying
+        this.view.inputTitleElement.value = titleElement.innerText;
+        this.view.inputTitleElement.classList.remove("hidden");
+        this.view.inputTitleElement.focus();
+      });
+
+//when finish up with title modifications (focus is remove from the input element)
+      this.view.inputTitleElement.addEventListener("blur", (e) => {
+        let value = e.target.value.trim();
+        if (value?.length > 0) {
+          this.changeTitle(value);
+        }
+
+        e.target.classList.add("hidden");
+        this.view.titleElement.classList.remove("hidden");
+        this.view.titleElement.querySelector("p").classList.remove("hidden");
+      });
+
       // Screen
       const setScreenHighlight = (e) => {
         let element = e.target;
@@ -367,14 +394,14 @@ if (newTitle?.length > 0) this.title = newTitle;
       this.view.miniTimerElement.addEventListener("click", this.maximizeView);
     }
   }
-  
-maximizeView = () => {
-    this.changeView(View.getView());
-}
 
-restoreView = () => {
-  this.changeView(new miniView());
-}
+  maximizeView = () => {
+    this.changeView();
+  }
+
+  restoreView = () => {
+    this.changeView();
+  }
 
 
   displayTime() {
@@ -468,7 +495,7 @@ restoreView = () => {
 
   #warn() {
     console.log("Warning !!!");
-    if (this.view.viewIsNormal) {
+    if (this.view.viewIsMaximum) {
       this.view.screen.classList.add("warning");
     } else {
       this.view.miniScreen.classList.add("warning");
@@ -487,7 +514,7 @@ restoreView = () => {
     else if (this.hasStarted) {
       this.#pause();
     }
-    if (this.view.viewIsNormal) {
+    if (this.view.viewIsMaximum) {
       this.view.hideTimingControls();
       this.view.runningDisplay();
     }
@@ -515,14 +542,14 @@ restoreView = () => {
 
     if (this.hasPaused) this.hasPaused = false;
     if (!this.hasStarted) this.hasStarted = true;
-    if (this.view.viewIsNormal) this.view.startPauseNext("pause");
+    if (this.view.viewIsMaximum) this.view.startPauseNext("pause");
   }
 
   #pause() {
     if (!this.hasFinished) {
       this.hasPaused = true;
       console.log("Timer paused");
-      if (this.view.viewIsNormal) this.view.startPauseNext("resume");
+      if (this.view.viewIsMaximum) this.view.startPauseNext("resume");
       this.clearTimer();
     }
   }
@@ -530,7 +557,7 @@ restoreView = () => {
   #resume() {
     if (this.hasPaused && !this.hasFinished) {
       this.#runTimer();
-      if (this.view.viewIsNormal) this.view.startPauseNext("pause");
+      if (this.view.viewIsMaximum) this.view.startPauseNext("pause");
       console.log("Timer resumed")
     }
   }
@@ -548,7 +575,7 @@ restoreView = () => {
     this.reinit();
 
     this.displayTime();
-    if (this.view.viewIsNormal) {
+    if (this.view.viewIsMaximum) {
       this.view.removeScreenHighLight();
       this.view.startPauseNext("start");
     }
@@ -559,8 +586,8 @@ restoreView = () => {
     this.hasPaused = false;
     this.hasWarned = false;
     this.hasFinished = false;
-    
-    if (this.view.viewIsNormal) this.view.reinitDisplay();
+
+    if (this.view.viewIsMaximum) this.view.reinitDisplay();
   }
 }
 
@@ -583,39 +610,48 @@ function editTime() {
   inputTimeField.classList.remove("hidden");
 }
 
-const counters = [];
-let currentCounter;
+const timers = [];
+let currentTimer;
 
-let count1 = new Counter(30);
+let timer2 = new Timer(260, "Convention");
+timer2.changeView();
+let timer1 = new Timer(700, "Posting");
+timer1.changeView();
 
-let view1 = new View();
-let minView1 = new MiniView()
+let timer3 = new Timer(600, "etoile");
 
-const timer = new Timer(count1, View.getView());
+//timers.push(timer1, timer2, timer3);
 
-setTimeout(() => { timer.changeView(minView1) }, 7000)
-//setTimeout(() => { timer.changeView(new MiniView()) }, 5000)
+console.log(timers);
 
-// Dom elements
+function initializeStoredTimers(storedTiners) {
+  storedTiners.forEach(timer => {
+    timer.updateView();
+  });
+}
+
 const timerList = document.querySelector(".timer-list");
 const addTimer = document.querySelector(".add-timer");
 
-addTimer.addEventListener("click", setNewCounter);
+addTimer.addEventListener("click", setNewTimer);
 
-function saveCurrentCounter() {
-  counters.push(currentCounter);
+function saveCurrentTimer() {
+  timers.push(currentTimer);
+  currentTimer.changeView(new MiniView())
 }
 
-function setNewCounter() {
-  if (askToSaveCounter()) saveCurrentCounter();
-  timer.setCounter();
+function setNewTimer() {
+  if (askToSaveTimer()) {
+    saveCurrentTimer();
+  }
+  currentTimer = new Timer(new Counter(), new View());
 }
 
-function askToSaveCounter() {
-  let answer = prompt(`Save the timer ?
-  Type y for yes and n for no`);
+function askToSaveTimer() {
+  let answer = prompt(`Do you want to, save the timer ?
+  Type Y for YES, or N for NO`)?.trim().toLowerCase();
 
-  return answer.trim().toLowerCase() === "y" ? true : false
+  return answer === "y" || answer === "yes" ? true : false
 }
 
 function generateUniqueId(idArray, maxId = 1000000) {
