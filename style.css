@@ -158,15 +158,14 @@ button.decrement {
   background-color: darkgray;
 }
 
-.timer-list {
+.timer-list:not(:empty) {
   display: flex;
-  justify-content: space-around;
+  justify-content: flex-start;
   align-items: center;
   overflow-x: scroll;
   width: 100%;
   padding: 5px;
   grid-area: timerlist;
-  background-color: #F0F0F5;
 }
 
 .timer-list .timer-preview {
