@@ -68,8 +68,8 @@ class MiniView {
     this.miniTimerElement = document.createElement("div");
 
     this.miniTimerElement.innerHTML = this.miniTimerHTML;
-    this.miniTimerElement.setAttribute("id", this.id);
-    this.miniTimerElement.classList.add("timer-preview");
+    
+    this.miniTimerElement.classList.add("timer-preview", 'rounded-corner');
     this.titleElement = this.miniTimerElement.querySelector(".title");
     this.miniTimeElement = this.miniTimerElement.querySelector(".time");
     this.mount();
@@ -94,7 +94,7 @@ class MiniView {
 
 class View {
   static timerHTML = `
-    <div class="display">
+    <div class="display rounded-corner">
      <div class="title"></div>
      <input class="title hidden" type="text" name="title" maxlength=15 pattern=".{,15}" title="timer name should be at most 15 character long"/>
       <div class="screen">
@@ -108,12 +108,12 @@ class View {
     </div>
     <div class="controls">
       <div class="timing hidden">
-        <button class="decrement">Decrement</button>
-        <button class="increment">Increment</button>
+        <button class="decrement rounded-corner">Decrement</button>
+        <button class="increment rounded-corner">Increment</button>
       </div>
       <div class="action">
-        <button class="start-pause max-button" next="start">Start</button>
-        <button class="reset hidden">Reset</button>
+        <button class="start-pause rounded-corner max-button" next="start">Start</button>
+        <button class="reset hidden rounded-corner">Reset</button>
       </div>
     </div>
   `;
@@ -333,7 +333,7 @@ static currentTimer;
     if (sense === "increment") this.counter.incrementBy(input);
     if (sense === "decrement") this.counter.decrementBy(input);
     this.displayTime();
-    this.view.startPauseButton.setAttribute("next", "start");
+    this.view.startPauseNext("start");
     this.reinit();
   }
 
@@ -406,19 +406,9 @@ static currentTimer;
     Timer.currentTimer = this;
   }
 
-  restoreView = () => {
-  Timer.currentTimer.changeView();
-    this.changeView();
-    Timer.currentTimer = this;
-  }
-
 
   displayTime() {
     this.view.updateTime(this.getTime())
-  }
-
-  changeInnerHTML(element, htmlValue) {
-    element.innerHTML = htmlValue
   }
 
   secondsFromTime(time) {
@@ -503,7 +493,6 @@ static currentTimer;
   }
 
   #warn() {
-    console.log("Warning !!!");
     if (this.view.viewIsMaximum) {
       this.view.screenElement.classList.add("warning");
     } else {
@@ -519,7 +508,6 @@ static currentTimer;
     }
     else if (this.hasStarted && this.hasPaused) {
       this.#resume();
-      console.log("Timer already started");
     }
     else if (this.hasStarted) {
       this.#pause();
@@ -537,9 +525,7 @@ static currentTimer;
       this.displayTime();
 
       if (this.counter.getCount() === 0) {
-        console.log("Time over")
         this.#beep(this.beepAudio, 10);
-
         this.clearTimer();
         this.hasFinished = true;
       }

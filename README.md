@@ -1,6 +1,6 @@
-# Counter
+# Multitimer
 ----
-Cette application est un timer (compte à  rebours) destiné à mettre en avant l'utilisation rationnelle du temps.
+Cette application est un timer (compte à  rebours) destiné à mettre en avant l'utilisation rationnelle du temps. Elle permet la gestion simultanée de plusieurs compte à rebours.
 
 ## État du timer
 
