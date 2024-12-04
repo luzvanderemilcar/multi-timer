@@ -5,11 +5,13 @@ class Counter {
   #count;
   #defaultCount;
   #step;
+  #hundredths;
 
   constructor(initialCount = 300) {
     this.#defaultCount = initialCount;
     this.#count = initialCount;
     this.#step = 1;
+    this.#hundredths = 0;
     this.#id = generateUniqueId(Counter.idArray);
   }
 
@@ -22,18 +24,22 @@ class Counter {
   // Counter manipulations
   increment() {
     this.#count += this.#step;
+    this.resetHundredths()
   }
 
   incrementBy(value) {
     this.#count += value;
+this.resetHundredths()
   }
 
   decrement() {
     this.#count -= this.#step;
+    this.resetHundredths();
   }
 
   decrementBy(value) {
-    this.#count -= value
+    this.#count -= value;
+    this.resetHundredths();
   }
 
   setStep(newStep) {
@@ -47,15 +53,34 @@ class Counter {
   setCount(newCount) {
     this.#count = newCount;
     this.#defaultCount = newCount;
+    this.resetHundredths()
   }
 
   getCount() {
     return this.#count
   }
+  
+  decrementHundredths() {
+    this.#hundredths--
+  }
+  
+  reinitHundredths() {
+    this.#hundredths = 0;
+  }
+  
+  resetHundredths() {
+    if (this.getCount() > 0) {
+    this.#hundredths = 99;
+    }
+  }
+  getHundredths() {
+    return this.#hundredths
+  }
 
   reset() {
     this.#count = this.#defaultCount;
     this.#step = 1;
+    this.reinitHundredths();
   }
 }
 
@@ -115,7 +140,7 @@ class View {
         </div>
         <div class="additional-time warning">
           <hr/>
-          <span>-</span><span>00:01</span>
+          <span>-</span><span class="info">00:01</span>
         </div>
       </div>
       <div class="input-time hidden" >
@@ -162,7 +187,10 @@ class View {
     this.hourElement = this.screenElement.querySelector("span.hours");
     this.minuteElement = this.screenElement.querySelector("span.minutes");
     this.secondElement = this.screenElement.querySelector("span.seconds");
+    this.hundredthElement = this.screenElement.querySelector("span.hundredths");
     this.timeElements = this.screenElement.querySelectorAll("span.time-unit");
+    
+    this.additionalTimeElement = this.screenElement.querySelector("div.additional-time span.info");
 
     //Timer control elements
     this.controls = this.timerElement.querySelector(".controls");
@@ -204,6 +232,11 @@ class View {
     this.hourElement.innerHTML = hoursFormatted;
     this.minuteElement.innerHTML = minutesFormatted;
     this.secondElement.innerHTML = secondsFormatted;
+  }
+  
+  updateHundredths(hundredths) {
+    let hundredthsString = hundredths > 9 ? `${hundredths}` : `0${hundredths}`
+    this.hundredthElement.innerText = hundredthsString;
   }
 
   // reinitialize the timer display to the start
@@ -290,6 +323,7 @@ class Timer {
 
     this.changeTitle(title);
     this.displayTime();
+    this.displayHundredths();
     this.addListeners();
   }
 
@@ -329,6 +363,7 @@ class Timer {
 
   updateView() {
     this.displayTime();
+    this.displayHundredths();
     this.changeTitle();
 
     // Update view according to Timer state
@@ -354,10 +389,9 @@ class Timer {
         this.view.startPauseNext("start");
       }
     }
-
     // the timer has passed the critical time to send visual warning 
     if (this.hasWarned) {
-      this.hasWarned = false;
+    this.#warn();
     }
   }
 
@@ -378,6 +412,8 @@ class Timer {
     if (sense === "increment") this.counter.incrementBy(input);
     if (sense === "decrement") this.counter.decrementBy(input);
     this.displayTime();
+    this.counter.reinitHundredths();
+    this.displayHundredths();
     this.view.startPauseNext("start");
     this.reinit();
   }
@@ -462,6 +498,11 @@ class Timer {
 // display the time on the screen according to the current count
   displayTime() {
     this.view.updateTime(this.getTime())
+  }
+  
+  displayHundredths() {
+    
+    if (this.view.viewIsMaximum) this.view.updateHundredths(this.counter.getHundredths());
   }
 
   secondsFromTime(time) {
@@ -580,8 +621,14 @@ class Timer {
   #runTimer() {
 
     this.#timerId = setInterval(() => {
+    
+    if (this.counter.getHundredths() == 0) {
       this.counter.decrementBy(1);
       this.displayTime();
+    }
+    this.displayHundredths();
+    this.counter.decrementHundredths();
+    
 // the countet reach 0
       if (this.counter.getCount() === 0) {
         this.#beep(this.audioBeep, 10);
@@ -592,7 +639,7 @@ class Timer {
       else if (this.counter.getCount() <= this.criticalCount && !this.hasWarned) {
         this.#warn();
       }
-    }, 1000);
+    }, 10);
 
     if (this.hasPaused) this.hasPaused = false;
     if (!this.hasStarted) this.hasStarted = true;
@@ -633,6 +680,8 @@ class Timer {
     this.reinit();
 
     this.displayTime();
+    this.displayHundredths();
+    
     if (this.view.viewIsMaximum) {
       this.view.removeScreenHighLight();
       this.view.startPauseNext("start");
@@ -658,7 +707,7 @@ function initializeStoredTimers(storedTiners) {
   });
 }
 
-let timer1 = new Timer(600, "etoile");
+let timer1 = new Timer(20, "etoile");
 
 const timerList = document.querySelector(".timer-list");
 const addTimer = document.querySelector(".add-timer");
