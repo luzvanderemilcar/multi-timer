@@ -81,7 +81,9 @@ div.title p {
 input.title {
   background-color: var(--input-bg-color, #E9E9E9);
   text-align: center;
-  width: 80%
+  width: 70%;
+  outline: none;
+  border: none;
 }
 
 .screen {
@@ -91,7 +93,7 @@ input.title {
   text-align: center;
 }
 
-.screen span.hundredths {
+.screen span.partials {
   font-size: 1.75rem
 }
 

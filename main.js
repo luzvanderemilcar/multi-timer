@@ -5,13 +5,14 @@ class Counter {
   #count;
   #defaultCount;
   #step;
-  #hundredths;
+  #partials;
 
   constructor(initialCount = 300) {
     this.#defaultCount = initialCount;
     this.#count = initialCount;
     this.#step = 1;
-    this.#hundredths = 0;
+    this.#partials = 0;
+    this.partialsType = "tenth"; // "tenth" "hundredth"
     this.#id = generateUniqueId(Counter.idArray);
   }
 
@@ -24,22 +25,22 @@ class Counter {
   // Counter manipulations
   increment() {
     this.#count += this.#step;
-    this.resetHundredths()
+    this.resetPartials()
   }
 
   incrementBy(value) {
     this.#count += value;
-this.resetHundredths()
+    this.resetPartials()
   }
 
   decrement() {
     this.#count -= this.#step;
-    this.resetHundredths();
+    this.resetPartials();
   }
 
   decrementBy(value) {
     this.#count -= value;
-    this.resetHundredths();
+    this.resetPartials();
   }
 
   setStep(newStep) {
@@ -53,34 +54,44 @@ this.resetHundredths()
   setCount(newCount) {
     this.#count = newCount;
     this.#defaultCount = newCount;
-    this.resetHundredths()
+    this.resetPartials()
   }
 
   getCount() {
     return this.#count
   }
-  
-  decrementHundredths() {
-    this.#hundredths--
+
+  decrementPartials() {
+    this.#partials--
   }
-  
-  reinitHundredths() {
-    this.#hundredths = 0;
+
+  reinitPartials() {
+    this.#partials = 0;
   }
-  
-  resetHundredths() {
+
+  resetPartials() {
     if (this.getCount() > 0) {
-    this.#hundredths = 99;
+      switch (this.partialsType) {
+        case 'tenth':
+          this.#partials = 9;
+          break;
+        case 'hundredth':
+          this.#partials = 99;
+          break;
+        default:
+          this.#partials = 99;
+      }
     }
   }
-  getHundredths() {
-    return this.#hundredths
+
+  getPartials() {
+    return this.#partials
   }
 
   reset() {
     this.#count = this.#defaultCount;
     this.#step = 1;
-    this.reinitHundredths();
+    this.reinitPartials();
   }
 }
 
@@ -136,7 +147,7 @@ class View {
      <input class="title hidden" type="text" name="title" maxlength=15 pattern=".{,15}" title="timer name should be at most 15 character long"/>
       <div class="screen">
        <div class="time">
-        <span class="hours time-unit" name="hours">00</span>:<span class="minutes time-unit" name="minutes">00</span>:<span class="seconds time-unit" name="seconds">50</span>.<span class="hundredths time-unit">87</span>
+        <span class="hours time-unit" name="hours">00</span>:<span class="minutes time-unit" name="minutes">00</span>:<span class="seconds time-unit" name="seconds">50</span>.<span class="partials time-unit">87</span>
         </div>
         <div class="additional-time warning">
           <hr/>
@@ -187,9 +198,9 @@ class View {
     this.hourElement = this.screenElement.querySelector("span.hours");
     this.minuteElement = this.screenElement.querySelector("span.minutes");
     this.secondElement = this.screenElement.querySelector("span.seconds");
-    this.hundredthElement = this.screenElement.querySelector("span.hundredths");
+    this.partialElement = this.screenElement.querySelector("span.partials");
     this.timeElements = this.screenElement.querySelectorAll("span.time-unit");
-    
+
     this.additionalTimeElement = this.screenElement.querySelector("div.additional-time span.info");
 
     //Timer control elements
@@ -233,10 +244,22 @@ class View {
     this.minuteElement.innerHTML = minutesFormatted;
     this.secondElement.innerHTML = secondsFormatted;
   }
-  
-  updateHundredths(hundredths) {
-    let hundredthsString = hundredths > 9 ? `${hundredths}` : `0${hundredths}`
-    this.hundredthElement.innerText = hundredthsString;
+
+  updatePartials(partials, type="hundredth") {
+    let partialsString;
+ 
+    switch (type) {
+      case 'tenth':
+        partialsString = `${partials}`
+        break;
+      case 'hundredth':
+        partialsString = partials > 9 ? `${partials}` : `0${partials}`;
+        break;
+      default:
+        partialsString = partials > 9 ? `${partials}` : `0${partials}`;
+    }
+
+    this.partialElement.innerText = partialsString;
   }
 
   // reinitialize the timer display to the start
@@ -314,16 +337,17 @@ class Timer {
     Timer.timers.push(this);
     Timer.currentTimer = this;
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
-    this.maximumView = new View();
-    this.view = this.maximumView;
 
     this.counter = new Counter(count);
     this.hasStarted = false;
     this.criticalCount = 15;
 
+    this.maximumView = new View();
+    this.view = this.maximumView;
+
     this.changeTitle(title);
     this.displayTime();
-    this.displayHundredths();
+    this.displayPartials();
     this.addListeners();
   }
 
@@ -363,7 +387,7 @@ class Timer {
 
   updateView() {
     this.displayTime();
-    this.displayHundredths();
+    this.displayPartials();
     this.changeTitle();
 
     // Update view according to Timer state
@@ -391,7 +415,7 @@ class Timer {
     }
     // the timer has passed the critical time to send visual warning 
     if (this.hasWarned) {
-    this.#warn();
+      this.#warn();
     }
   }
 
@@ -412,8 +436,8 @@ class Timer {
     if (sense === "increment") this.counter.incrementBy(input);
     if (sense === "decrement") this.counter.decrementBy(input);
     this.displayTime();
-    this.counter.reinitHundredths();
-    this.displayHundredths();
+    this.counter.reinitPartials();
+    this.displayPartials();
     this.view.startPauseNext("start");
     this.reinit();
   }
@@ -456,14 +480,14 @@ class Timer {
         element.classList.add("highlight");
         this.view.showTimingControls();
       }
-      // add screen highlight for all time unit element out of hundredths
+      // add screen highlight for all time unit element out of partials
       this.view.timeElements.forEach(elem => {
-        if (!elem.classList.contains("hundredths")) elem.addEventListener("dblclick", setScreenHighlight);
+        if (!elem.classList.contains("partials")) elem.addEventListener("dblclick", setScreenHighlight);
       });
 
       // controls 
       this.view.incrementButton.addEventListener("click", (e) => {
-       //get te value of the highlighted time unit
+        //get te value of the highlighted time unit
         let timeUnit = this.view.screenElement.getAttribute("highlight");
         this.increment(timeUnit);
       });
@@ -476,33 +500,33 @@ class Timer {
       this.view.startPauseButton.addEventListener("click", () => {
         this.startPause();
       });
-      
+
       this.view.resetButton.addEventListener("click", () => {
         this.reset();
       });
     } else {
-  // listeners for mini view
+      // listeners for mini view
       this.view.miniTimerElement.addEventListener("click", this.maximizeView);
     }
   }
 
   maximizeView = () => {
-  // minimize the view of old timer
+    // minimize the view of old timer
     Timer.currentTimer.changeView();
-    
+
     // Maximize the view of the clicked timer()
     this.changeView();
     Timer.currentTimer = this;
   }
 
-// display the time on the screen according to the current count
+  // display the time on the screen according to the current count
   displayTime() {
     this.view.updateTime(this.getTime())
   }
-  
-  displayHundredths() {
-    
-    if (this.view.viewIsMaximum) this.view.updateHundredths(this.counter.getHundredths());
+
+  displayPartials() {
+
+    if (this.view.viewIsMaximum) this.view.updatePartials(this.counter.getPartials(), this.counter.partialsType);
   }
 
   secondsFromTime(time) {
@@ -533,14 +557,14 @@ class Timer {
     throw new Error("Can't Find Timer ID");
   }
 
-//Format a time object from count
+  //Format a time object from count
   getTime() {
     let timeFormatted = "";
     let hours, hoursFormatted, minutes, minutesFormatted, seconds, secondsFormatted;
-    
+
     //get current count
     let countProcessing = this.counter.getCount();
-//  seconds greater or equal to one hour
+    //  seconds greater or equal to one hour
     if (countProcessing / 3600 >= 1) {
       hours = Math.floor(countProcessing / 3600);
       hoursFormatted = `${hours<10 ? "0": ""}${hours}`;
@@ -570,7 +594,7 @@ class Timer {
     }
   }
 
-// Beep the end of the time
+  // Beep the end of the time
   #beep(audio, duration = 5) {
     try {
       audio.play();
@@ -584,13 +608,13 @@ class Timer {
     }
   }
 
-// stop the beep and reset his timing
+  // stop the beep and reset his timing
   #stopBeep(audio) {
     audio.pause();
     audio.currentTime = 0;
   }
 
-// Visual warning the time is about to end
+  // Visual warning the time is about to end
   #warn() {
     if (this.view.viewIsMaximum) {
       this.view.screenElement.classList.add("warning");
@@ -601,7 +625,7 @@ class Timer {
   }
 
   startPause() {
-//control the action of startpause button according to the state of the timer
+    //control the action of startpause button according to the state of the timer
     if (!this.hasStarted) {
       this.#runTimer();
     }
@@ -617,42 +641,55 @@ class Timer {
     }
   }
 
-//run the timer whenever it is called 
+  //run the timer whenever it is called 
   #runTimer() {
+    let partialsValue;
+
+
+    switch (this.counter.partialsType) {
+      case 'tenth':
+        partialsValue = .1;
+        break;
+      case 'hundredth':
+        partialsValue = .01;
+        break;
+      default:
+        partialsValue = .01;
+    }
 
     this.#timerId = setInterval(() => {
-    
-    if (this.counter.getHundredths() == 0) {
-      this.counter.decrementBy(1);
-      this.displayTime();
-    }
-    this.displayHundredths();
-    this.counter.decrementHundredths();
-    
-// the countet reach 0
+
+      if (this.counter.getPartials() == 0) {
+        this.counter.decrementBy(1);
+        this.displayTime();
+      }
+      this.displayPartials();
+      if (this.counter.getCount() > 0) this.counter.decrementPartials();
+
+      // the countet reach 0
       if (this.counter.getCount() === 0) {
         this.#beep(this.audioBeep, 10);
         this.clearTimer();
         this.hasFinished = true;
       }
-// the count is lower than the critical count
+      // the count is lower than the critical count
       else if (this.counter.getCount() <= this.criticalCount && !this.hasWarned) {
         this.#warn();
       }
-    }, 10);
+    }, 1000 * partialsValue);
 
     if (this.hasPaused) this.hasPaused = false;
     if (!this.hasStarted) this.hasStarted = true;
     if (this.view.viewIsMaximum) this.view.startPauseNext("pause");
   }
 
-// pause the timer
+  // pause the timer
   #pause() {
     if (!this.hasFinished) {
       this.hasPaused = true;
 
       if (this.view.viewIsMaximum) this.view.startPauseNext("resume");
-      
+
       //clear the timeout
       this.clearTimer();
     }
@@ -673,15 +710,15 @@ class Timer {
     }
   }
 
-// reset the counter, the timer and its state 
+  // reset the counter, the timer and its state 
   reset() {
     this.counter.reset();
     this.clearTimer();
     this.reinit();
 
     this.displayTime();
-    this.displayHundredths();
-    
+    this.displayPartials();
+
     if (this.view.viewIsMaximum) {
       this.view.removeScreenHighLight();
       this.view.startPauseNext("start");
@@ -695,7 +732,7 @@ class Timer {
     this.hasWarned = false;
     this.hasFinished = false;
 
-// reinitialize the display of the maximum view if active
+    // reinitialize the display of the maximum view if active
     if (this.view.viewIsMaximum) this.view.reinitDisplay();
   }
 }
@@ -722,7 +759,7 @@ function setNewTimer() {
 // generate a unique number between 0 and a given one based on an array of ids in use.
 function generateUniqueId(idArray, maxId = 1000000) {
   let id;
-  
+
   // loop until a unique number is found
   while (!id) {
     let candidateId = Math.floor(Math.random() * maxId) + 1;
