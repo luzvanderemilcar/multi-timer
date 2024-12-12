@@ -10,7 +10,7 @@ class Counter {
 
   constructor(initialCount) {
     this.#id = generateUniqueId(Counter.idArray);
-    
+
     this.#count = this.calculatePartialsCount(initialCount);
     this.#defaultCount = this.#count;
     this.#step = 1;
@@ -23,9 +23,9 @@ class Counter {
 
   getPartialsDetails() {
     if (!this.partialsType) {
-      this.partialsType = 'tenth';
+      this.partialsType = 'tenth'; // tenth | hundredth | thousandth
     }
-    
+
     if (!this.#partialsDetails) {
       let maximumSecond = 359999;
 
@@ -44,6 +44,13 @@ class Counter {
           zeros = "00";
           partialsPerSecond = 100;
           break;
+        case 'thousands':
+          value = .001;
+          maximum = 1000;
+          zeros = "000";
+          partialsPerSecond = 1000;
+          break;
+
       }
       maximumCount = maximumSecond * partialsPerSecond;
 
@@ -154,16 +161,16 @@ class View {
     <div class="display rounded-corner">
      <div class="title-container">
      <p class="title" ></p>
-     <hr/>
      </div>
-     <input class="title hidden" type="text" name="title" maxlength=15 pattern=".{,15}" title="timer name should be at most 15 character long"/>
+     <input class="title-input hidden" type="text" name="title" maxlength=15 pattern=".{,15}" title="timer name should be at most 15 character long"/>
+     <hr/>
       <div class="screen">
        <div class="time">
         <span class="hours time-unit" name="hours">00</span>:<span class="minutes time-unit" name="minutes">00</span>:<span class="seconds time-unit" name="seconds">50</span>.<span class="partials time-unit">87</span>
         </div>
-        <div class="additional-time warning">
-          <hr/>
-          <span class="info">-00:00</span>
+        <hr/>
+        <div class="additional-time warning invisible">
+          <span class="info"></span>
         </div>
       </div>
       <div class="input-time hidden" >
@@ -205,15 +212,16 @@ class View {
 
     this.titleElement.innerHTML = `timer`;
 
-    this.inputTitleElement = this.displayElement.querySelector("input.title");
+    this.inputTitleElement = this.displayElement.querySelector("input.title-input");
 
     this.hourElement = this.screenElement.querySelector("span.hours");
     this.minuteElement = this.screenElement.querySelector("span.minutes");
     this.secondElement = this.screenElement.querySelector("span.seconds");
     this.partialElement = this.screenElement.querySelector("span.partials");
     this.timeElements = this.screenElement.querySelectorAll("span.time-unit");
+this.additionalTimeContainerElement = this.screenElement.querySelector("div.additional-time");
 
-    this.additionalTimeElement = this.screenElement.querySelector("div.additional-time span.info");
+    this.additionalTimeElement = this.additionalTimeContainerElement.querySelector("span.info");
 
     //Timer control elements
     this.controls = this.timerElement.querySelector(".controls");
@@ -269,7 +277,7 @@ class View {
   reinitDisplay() {
     this.screenElement.classList.remove("warning");
     this.maximizeStartPause();
-    this.updateAdditionalTime({ timeFormatted: "-00:00" });
+   // this.updateAdditionalTime({ timeFormatted: "-00:00" });
   }
 
   // set the display to that of a running timer
@@ -277,6 +285,7 @@ class View {
     this.removeScreenHighLight();
     this.hideTimingControls();
     this.restoreStartPause();
+    this.startPauseButtonNext("pause");
   }
 
   //remove the class highlight from the time-unit elements
@@ -285,14 +294,32 @@ class View {
       if (elem.classList.contains("highlight")) elem.classList.remove("highlight");
     });
   }
+  
+  // hide element while keeping its space on the documen
+  makeInvisible(element) {
+    if (!element.classList.contains("invisible")) element.classList.add("invisible")
+  }
+makeVisible(element) {
+  if (element.classList.contains("invisible")) element.classList.remove("invisible")
+}
 
+// hide element and its space on the document
   hide(element) {
     if (!element.classList.contains("hidden")) element.classList.add("hidden")
   }
   show(element) {
     if (element.classList.contains("hidden")) element.classList.remove("hidden")
   }
-
+  
+  // hide and show additional time display
+  
+  hideAdditionalTime() {
+    this.makeInvisible(this.additionalTimeContainerElement)
+  }
+  
+showAdditionalTime() {
+  this.makeVisible(this.additionalTimeContainerElement)
+}
   // Hide and show increment and decrement buttons
   hideTimingControls() {
     this.hide(this.timingControls);
@@ -303,8 +330,10 @@ class View {
 
   // maximize the startpause button as for the initial look
   maximizeStartPause() {
-    if (!this.startPauseButton.classList.contains("max-button")) this.startPauseButton.classList.add("max-button");
+    
     this.hide(this.resetButton);
+    
+    if (!this.startPauseButton.classList.contains("max-button")) this.startPauseButton.classList.add("max-button");
   }
 
   // startpause in running display
@@ -314,13 +343,23 @@ class View {
   }
 
   //customize the look of the startpause button according to the next action
-  startPauseNext(action) {
-    if (["start", "resume", "pause"].includes(action)) {
+  startPauseButtonNext(action) {
+    if (["start", "resume", "pause", "stop"].includes(action)) {
       this.startPauseButton.setAttribute("next", action);
       this.startPauseButton.innerHTML = capitalCase(action);
       if (action === "start") this.maximizeStartPause();
       if (action === "pause" || action === "resume") this.restoreStartPause();
     }
+  }
+
+  maximizeResetButton() {
+    this.hide(this.startPauseButton);
+    if (!this.resetButton.classList.contains("max-button")) this.resetButton.classList.add("max-button");
+  }
+
+  restoreResetButton() {
+    if (this.resetButton.classList.contains("max-button")) this.resetButton.classList.remove("max-button");
+    this.show(this.startPauseButton);
   }
 }
 
@@ -406,19 +445,20 @@ class Timer {
 
       if (this.hasStarted && this.hasPaused) {
         this.view.restoreStartPause();
-        this.view.startPauseNext("resume");
-
+        this.view.startPauseButtonNext("resume");
       }
 
       //the timer is running 
       else if (this.hasStarted & !this.hasTimeFinished) {
         this.view.runningDisplay();
-        this.view.startPauseNext("pause");
       }
       // the timer has not yet been started 
       else if (!this.hasStarted) {
         this.view.reinitDisplay();
-        this.view.startPauseNext("start");
+      }
+      
+      else if (this.hasTimeFinished) {
+        this.view.startPauseButtonNext("stop");
       }
     }
     // the timer has passed the critical time to send visual warning 
@@ -439,37 +479,37 @@ class Timer {
   // sense = increment | decrement 
   changeBy(timeUnit = "minutes", sense = "increment") {
     this.clearTimer();
-
+    let count = this.counter.getCount();
     let partialsDetails = this.counter.getPartialsDetails();
+    let { remainingPartials: partials } = this.getTime(count, partialsDetails);
 
     let { partialsPerSecond, maximumCount } = partialsDetails;
-    let count = this.counter.getCount();
 
     let input = timeUnit === "hours" ? 3600 * partialsPerSecond : timeUnit === "seconds" ? 1 * partialsPerSecond : 60 * partialsPerSecond;
-    let partials = parseInt(this.getTime(count, partialsDetails).partialsFormatted);
 
     let nextCount;
 
     if (sense === "increment") {
       nextCount = count + input - partials;
-
+      // test the next probable value of coun is not greater than maximum seconds of the timer capability
       if (nextCount <= maximumCount) {
         this.counter.incrementBy(input - partials);
       } else {
         console.log("Can't set timer with greater time");
       }
     }
-    console.log(count)
+    
     if (sense === "decrement") {
       nextCount = count - input - partials;
+      // test the sign of the next probable value of count
       if (nextCount >= 0) {
-        this.counter.decrementBy(input - partials);
+        this.counter.decrementBy(input + partials);
       } else {
         console.log("Can't set timer with negative time");
       }
     }
     this.displayTime();
-    this.view.startPauseNext("start");
+    this.view.startPauseButtonNext("start");
     this.reinit();
   }
 
@@ -552,24 +592,37 @@ class Timer {
 
   // display the time on the screen according to the current count
   displayTime() {
+  
     let count = this.counter.getCount();
     let partialsDetails = this.counter.getPartialsDetails();
     let timeInfos = this.getTime(count, partialsDetails);
+    
+    // boolean to show hours or not based on the view sisze
+    let showHours = this.view.viewIsMaximum ? false : true;
 
-
+// the time has ended
     if (count >= 0) {
       this.view.updateTime(timeInfos);
+      
+      //boolean to control additionalTime display is clear
+      let clearAdditionalTimeDisplay;
+      
+      if (!clearAdditionalTimeDisplay && !showHours)
+      {
+        this.view.updateAdditionalTime(this.getTime(0, partialsDetails, showHours));
+        this.view.hideAdditionalTime();
+        clearAdditionalTimeDisplay = true;
+      }
     } else {
-      let hasClearMainTimeDisplay = false;
+      let hasClearMainTimeDisplay;
 
-      if (!hasClearMainTimeDisplay) {
-
-        // clear main Screen on view change
+      if (!hasClearMainTimeDisplay && !showHours) {
+        // clear main time display on view change
         this.view.updateTime(this.getTime(0, partialsDetails));
+        this.view.showAdditionalTime();
+        
         hasClearMainTimeDisplay = true;
       }
-
-      let showHours = this.view.viewIsMaximum ? false : true;
 
       this.view.updateAdditionalTime(this.getTime(count, partialsDetails, showHours));
     }
@@ -585,6 +638,9 @@ class Timer {
         break;
       case 'hundredth':
         partialsString = !hasTimeNotFinished ? partialsZeros : partialsCount > 9 ? `${partialsCount}` : `0${partialsCount}`;
+        break;
+      case 'thousands':
+        partialsString = !hasTimeNotFinished ? partialsZeros : partialsCount > 99 ? `${partialsCount}` : partialsCount > 9 && partialsCount <= 99 ? `0${partialsCount}` : `00${partialsCount}`;
         break;
     }
 
@@ -682,7 +738,9 @@ class Timer {
     timeFormatted += secondsFormatted;
 
 
-    let partialsFormatted = this.getPartials(countProcessing, partialsDetails, !isTimeout)
+    let partialsFormatted = this.getPartials(countProcessing, partialsDetails, !isTimeout);
+    remainingPartials = countProcessing;
+
     return {
       timeFormatted,
       hoursFormatted,
@@ -727,9 +785,13 @@ class Timer {
   startPause() {
     //control the action of startpause button according to the state of the timer
     if (!this.hasStarted) {
-      this.#runTimer();
+      this.#start();
+    }
+    else if (this.hasStarted && this.hasTimeFinished) {
+      this.#stop();
     }
     else if (this.hasStarted && this.hasPaused) {
+      if (this.view.viewIsMaximum) this.view.runningDisplay();
       this.#resume();
     }
     else if (this.hasStarted) {
@@ -737,7 +799,6 @@ class Timer {
     }
     if (this.view.viewIsMaximum) {
       this.view.hideTimingControls();
-      this.view.runningDisplay();
     }
   }
 
@@ -757,38 +818,54 @@ class Timer {
       }
       // the countet reach 0
       if (this.counter.getCount() === 0) {
+        this.#beep(this.audioBeep, 10);
+      if (this.view.viewIsMaximum)  this.view.startPauseButtonNext("stop");
+      
         if (!this.hasTimeFinished) {
-          this.#beep(this.audioBeep, 10);
           this.hasTimeFinished = true;
-          if (!this.hasAdditionalTimeEnabled) this.clearTimer();
+          if (!this.hasAdditionalTimeEnabled) this.#stop();
         }
       }
     }, 1000 * partialsValue);
 
+    // setValue once 
     if (this.hasPaused) this.hasPaused = false;
     if (!this.hasStarted) this.hasStarted = true;
-    if (this.view.viewIsMaximum) this.view.startPauseNext("pause");
   }
+  
+#start() {
+  this.hasStarted = true;
+  this.#runTimer();
+  
+  if (this.view.viewIsMaximum) this.view.runningDisplay();
+}
 
   // pause the timer
   #pause() {
     this.hasPaused = true;
 
     if (this.view.viewIsMaximum) {
-      if (!this.hasTimeFinished) {
-        this.view.startPauseNext("resume");
-      } else {
-        this.view.startPauseNext("start");
-      }
+      if (!this.hasTimeFinished) this.view.startPauseButtonNext("resume");
     }
     //clear the timeout
     this.clearTimer();
   }
 
   #resume() {
-    if (this.hasPaused && !this.hasTimeFinished) {
+    if (this.hasPaused) {
       this.#runTimer();
-      if (this.view.viewIsMaximum) this.view.startPauseNext("pause");
+
+      if (this.view.viewIsMaximum) {
+        this.view.startPauseButtonNext("pause");
+      }
+      this.hasPaused = false;
+    }
+  }
+
+  #stop() {
+    if (this.hasTimeFinished) {
+      this.clearTimer();
+      this.view.maximizeResetButton();
     }
   }
 
@@ -809,7 +886,8 @@ class Timer {
 
     if (this.view.viewIsMaximum) {
       this.view.removeScreenHighLight();
-      this.view.startPauseNext("start");
+      this.view.restoreResetButton();
+      this.view.startPauseButtonNext("start");
     }
   }
 
@@ -832,7 +910,7 @@ function initializeStoredTimers(storedTiners) {
   });
 }
 
-let timer1 = new Timer(5, "etoile");
+let timer1 = new Timer(1, "etoile");
 
 const timerList = document.querySelector(".timer-list");
 const addTimer = document.querySelector(".add-timer");
