@@ -12,8 +12,8 @@ class Counter {
     this.#id = generateUniqueId(Counter.idArray);
 
     this.#count = this.calculatePartialsCount(initialCount);
-    this.#defaultCount = this.#count;
     this.#step = 1;
+    this.saveCount();
   }
 
   //get the counter id
@@ -91,10 +91,14 @@ class Counter {
   getStep() {
     return this.#step
   }
+  
+  saveCount() {
+    this.#defaultCount = this.#count;
+  }
 
   setCount(newCount) {
     this.#count = newCount;
-    this.#defaultCount = newCount;
+    this.saveCount()
   }
 
   getCount() {
@@ -115,6 +119,7 @@ class MiniView {
       <p class="title">timer</p>
       <p class="time"></p>
   `;
+  
   constructor() {
     //view size boolean
     this.viewIsMaximum = false;
@@ -835,6 +840,7 @@ class Timer {
   
 #start() {
   this.hasStarted = true;
+  this.counter.saveCount();
   this.#runTimer();
   
   if (this.view.viewIsMaximum) this.view.runningDisplay();
