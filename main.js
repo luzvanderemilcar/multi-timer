@@ -6,13 +6,14 @@ class Counter {
   #defaultCount;
   #step;
   #partials;
+  #partialsDetails;
 
-  constructor(initialCount = 300) {
-    this.#defaultCount = initialCount;
-    this.#count = initialCount;
-    this.#step = 1;
-    this.partialsType = "tenth"; // "tenth" "hundredth"
+  constructor(initialCount) {
     this.#id = generateUniqueId(Counter.idArray);
+    
+    this.#count = this.calculatePartialsCount(initialCount);
+    this.#defaultCount = this.#count;
+    this.#step = 1;
   }
 
   //get the counter id
@@ -21,23 +22,42 @@ class Counter {
   }
 
   getPartialsDetails() {
-    let value, maximum, minimum, zeros, partialsPerSecond;
-
-    switch (this.partialsType) {
-      case 'tenth':
-        value = .1;
-        maximum = 10;
-        zeros = "0";
-        partialsPerSecond = 10;
-        break;
-      case 'hundredth':
-        value = .01;
-        maximum = 100;
-        zeros = "00";
-        partialsPerSecond = 100;
-        break;
+    if (!this.partialsType) {
+      this.partialsType = 'tenth';
     }
-    return { value, type: this.partialsType, maximum, minimum: 1, zeros, partialsPerSecond };
+    
+    if (!this.#partialsDetails) {
+      let maximumSecond = 359999;
+
+      let value, maximum, minimum, zeros, partialsPerSecond, maximumCount;
+
+      switch (this.partialsType) {
+        case 'tenth':
+          value = .1;
+          maximum = 10;
+          zeros = "0";
+          partialsPerSecond = 10;
+          break;
+        case 'hundredth':
+          value = .01;
+          maximum = 100;
+          zeros = "00";
+          partialsPerSecond = 100;
+          break;
+      }
+      maximumCount = maximumSecond * partialsPerSecond;
+
+      this.#partialsDetails = { value, type: this.partialsType, maximum, minimum: 1, zeros, partialsPerSecond, maximumCount };
+    }
+    return this.#partialsDetails;
+  }
+
+  calculatePartialsCount(count) {
+    let { partialsPerSecond } = this.getPartialsDetails();
+    let secondsPerMinute = 60;
+    let partialsCount = count * secondsPerMinute * partialsPerSecond;
+
+    return partialsCount
   }
 
   // Counter manipulations
@@ -119,9 +139,9 @@ class MiniView {
     this.miniTimeElement.innerHTML = timeFormatted;
   }
 
-updateAdditionalTime({ timeFormatted }) {
-  this.miniTimeElement.innerHTML = timeFormatted;
-}
+  updateAdditionalTime({ timeFormatted }) {
+    this.miniTimeElement.innerHTML = timeFormatted;
+  }
 
   // implementation to change the title of the timer
   changeTitle(newTitle) {
@@ -318,12 +338,13 @@ class Timer {
   static timers = [];
   static currentTimer;
 
-  constructor(count = 300, title = "Timer") {
+  constructor(count = 5, title = "Timer") {
     Timer.timers.push(this);
     Timer.currentTimer = this;
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
     this.counter = new Counter(count);
+
     this.hasStarted = false;
     this.hasTimeFinished = false;
     this.hasWarned = false;
@@ -413,13 +434,40 @@ class Timer {
     this.changeBy(timeUnit, "decrement");
   }
 
+
   // timeUnit = hours | minutes | seconds
   // sense = increment | decrement 
   changeBy(timeUnit = "minutes", sense = "increment") {
     this.clearTimer();
-    let input = timeUnit === "hours" ? 3600 : timeUnit === "seconds" ? 1 : 60;
-    if (sense === "increment") this.counter.incrementBy(input);
-    if (sense === "decrement") this.counter.decrementBy(input);
+
+    let partialsDetails = this.counter.getPartialsDetails();
+
+    let { partialsPerSecond, maximumCount } = partialsDetails;
+    let count = this.counter.getCount();
+
+    let input = timeUnit === "hours" ? 3600 * partialsPerSecond : timeUnit === "seconds" ? 1 * partialsPerSecond : 60 * partialsPerSecond;
+    let partials = parseInt(this.getTime(count, partialsDetails).partialsFormatted);
+
+    let nextCount;
+
+    if (sense === "increment") {
+      nextCount = count + input - partials;
+
+      if (nextCount <= maximumCount) {
+        this.counter.incrementBy(input - partials);
+      } else {
+        console.log("Can't set timer with greater time");
+      }
+    }
+    console.log(count)
+    if (sense === "decrement") {
+      nextCount = count - input - partials;
+      if (nextCount >= 0) {
+        this.counter.decrementBy(input - partials);
+      } else {
+        console.log("Can't set timer with negative time");
+      }
+    }
     this.displayTime();
     this.view.startPauseNext("start");
     this.reinit();
@@ -512,17 +560,17 @@ class Timer {
     if (count >= 0) {
       this.view.updateTime(timeInfos);
     } else {
-    let hasClearMainTimeDisplay = false;
-    
-    if(!hasClearMainTimeDisplay) {
-    
-    // clear main Screen on view change
-      this.view.updateTime(this.getTime(0, partialsDetails));
-      hasClearMainTimeDisplay = true;
-    }
-    
-    let showHours = this.view.viewIsMaximum ? false: true;
-    
+      let hasClearMainTimeDisplay = false;
+
+      if (!hasClearMainTimeDisplay) {
+
+        // clear main Screen on view change
+        this.view.updateTime(this.getTime(0, partialsDetails));
+        hasClearMainTimeDisplay = true;
+      }
+
+      let showHours = this.view.viewIsMaximum ? false : true;
+
       this.view.updateAdditionalTime(this.getTime(count, partialsDetails, showHours));
     }
   }
@@ -634,7 +682,6 @@ class Timer {
     timeFormatted += secondsFormatted;
 
 
-    console.log(timeFormatted, countProcessing, count)
     let partialsFormatted = this.getPartials(countProcessing, partialsDetails, !isTimeout)
     return {
       timeFormatted,
@@ -785,7 +832,7 @@ function initializeStoredTimers(storedTiners) {
   });
 }
 
-let timer1 = new Timer(300, "etoile");
+let timer1 = new Timer(5, "etoile");
 
 const timerList = document.querySelector(".timer-list");
 const addTimer = document.querySelector(".add-timer");
