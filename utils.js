@@ -40,28 +40,28 @@ function limitInputValue(input, options = { min: 0, max: 50}) {
 }
 
 // excluding a list of caracter from being typed
-function excludeCharacter(input, options = { characterToExcludeList: [".", ","]}) {
-  let { characterToExcludeList } = options;
+function excludeCharacter(input, options = { excludedCharacterList: [".", ","]}) {
+  let { excludedCharacterList } = options;
 
-  let characterRegExp = new RegExp(`[${characterToExcludeList.join("")}]$`, "g");
+  let characterRegExp = new RegExp(`[${excludedCharacterList.join("")}]$`, "g");
   
   return input.replace(characterRegExp, "");
 }
 
 // validate hour input field 
-function validateHourInput(hours, options = { min: 0, max: 99, length: 2, border: "end", characterToExcludeList: [".", ","] }) {
+function validateHourInput(hours, options = { min: 0, max: 99, length: 2, border: "end", excludedCharacterList: [".", ","] }) {
 
   return truncateInput(limitInputValue(excludeCharacter(hours, options), options), options);
 }
 
 // validate minute input field 
-function validateMinuteInput(minutes, options = { min: 0, max: 59, length: 2, border: "end", characterToExcludeList: [".", ","]}) {
+function validateMinuteInput(minutes, options = { min: 0, max: 59, length: 2, border: "end", excludedCharacterList: [".", ","]}) {
 
   return truncateInput(limitInputValue(excludeCharacter(minutes, options), options), options);
 }
 
 // validate second input field 
-function validateSecondInput(seconds, options = { min: 0, max: 59, length: 2, border: "end", characterToExcludeList: [".", ","] }) {
+function validateSecondInput(seconds, options = { min: 0, max: 59, length: 2, border: "end", excludedCharacterList: [".", ","] }) {
 
   return truncateInput(limitInputValue(excludeCharacter(seconds, options), options), options);
 }
