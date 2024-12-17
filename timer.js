@@ -1,6 +1,6 @@
 import Counter from "/counter.js"
 import { View, MiniView } from "/views.js"
-import { sanitizeHourInput, sanitizeMinuteInput, sanitizeSecondInput } from "/utils.js";
+import { validateHourInput, validateMinuteInput, validateSecondInput, prependMissingZeros } from "/utils.js";
 
 export default class Timer {
   #timerId;
@@ -151,7 +151,7 @@ export default class Timer {
     if (this.view.viewIsMaximum) {
 
       // Double tap the title to edit it when the timer's maximum
-      this.view.titleContainerElement.addEventListener("dblclick", (e) => {
+      this.view.titleContainerElement.addEventListener("click", (e) => {
         this.view.titleContainerElement.classList.add("hidden");
 
         // catch the current value and assign if for modifying
@@ -179,6 +179,7 @@ export default class Timer {
       const setScreenHighlight = (e) => {
         let element = e.target;
         let timeUnit = element.getAttribute("name");
+        this.clearTimer();
         this.view.showTimingControls();
 
         //set the current value of the inputs
@@ -190,7 +191,7 @@ export default class Timer {
           if (timeUnit == inputTimeUnit) {
             inputElement.focus();
           }
-     
+
         });
       }
       // add screen highlight for all time unit element out of partials
@@ -208,20 +209,19 @@ export default class Timer {
         this.reset();
       });
       // save time input 
-      this.view.inputTimeModal.addEventListener("click", (e) => {
-        if (!e.target.closest("div.input-time")) {
-       
-          let hours = this.view.inputHourElement.value;
-          let minutes = this.view.inputMinuteElement.value;
-          let seconds = this.view.inputSecondElement.value;
-          
-          this.setCountFromTime(hours, minutes, seconds);
-          
-          this.view.hideInputTimeModal()
-        }
-      });
 
-      // input hour
+      const saveInputTime = () => {
+
+        let hours = this.view.inputHourElement.value;
+        let minutes = this.view.inputMinuteElement.value;
+        let seconds = this.view.inputSecondElement.value;
+
+        this.setCountFromTime(hours, minutes, seconds);
+
+        this.view.hideTimingControls();
+      };
+
+      // input focus event
       this.view.inputTimeElements.forEach(inputElement => {
         inputElement.addEventListener("focus", (e) => {
           let element = e.target;
@@ -239,15 +239,15 @@ export default class Timer {
 
           switch (timeUnit) {
             case 'hours':
-              processedValue = sanitizeHourInput(element.value);
+              processedValue = validateHourInput(element.value);
               break;
 
             case 'minutes':
-              processedValue = sanitizeMinuteInput(element.value);
+              processedValue = validateMinuteInput(element.value);
               break;
 
             case 'seconds':
-              processedValue = sanitizeSecondInput(element.value);
+              processedValue = validateSecondInput(element.value);
               break;
           }
           element.value = processedValue;
@@ -256,12 +256,29 @@ export default class Timer {
 
         inputElement.addEventListener("blur", (e) => {
           let element = e.target;
+          let requiredInputLength = Number(element.getAttribute("size"));
+          
+          // set the value to the exact length 
+          element.value = prependMissingZeros(element.value, requiredInputLength);
+          
           if (element.classList.contains("highlight")) {
             element.classList.remove("highlight")
           }
         });
       });
 
+      // Save time input on Enter keypress in last input field
+      this.view.inputSecondElement.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          saveInputTime();
+        }
+      });
+
+      // Save count from time input
+      this.view.setTimeButton.addEventListener("click", () => {
+        saveInputTime()
+      });
     } else {
       // listeners for mini view
       this.view.miniTimerElement.addEventListener("click", this.maximizeView);
@@ -398,7 +415,7 @@ export default class Timer {
       return timerCountInSeconds;
 
     } else {
-      throw new Error("time format invalid !");
+      throw new Error("Invalid time format !");
     }
   }
 
@@ -598,6 +615,7 @@ export default class Timer {
   #stop() {
     if (this.hasTimeFinished) {
       this.clearTimer();
+      this.#stopBeep();
       this.view.maximizeResetButton();
     }
   }

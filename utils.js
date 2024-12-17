@@ -3,19 +3,20 @@ function truncateInput(input, options = { length: 0, border: "start" }) {
   let { length, border } = options;
 
   if (input) {
-  let inputLength = input?.length;
-  
-  // If 
-  if (length > 0) {
-    if (length >= inputLength) return input;
-    if (border == "end") return input.slice(inputLength - length, inputLength);
-    if (border == "start") return input.slice(0, length);
-  }
-  return input
+    let inputLength = input?.length;
+
+    // If 
+    if (length > 0) {
+      if (length >= inputLength) return input;
+      if (border == "end") return input.slice(inputLength - length, inputLength);
+      if (border == "start") return input.slice(0, length);
+    }
+    return input
   }
 }
 
-function limitInputValue(input, options = { min: 0, max: 50 }) {
+// limit the value for the input field type="number"
+function limitInputValue(input, options = { min: 0, max: 50}) {
 
   let { min, max } = options;
 
@@ -34,30 +35,55 @@ function limitInputValue(input, options = { min: 0, max: 50 }) {
     }
     return String(limitedValue);
   } else {
-    return "00"
+    return ""
   }
 }
 
-function excludeCharacter(input, options = { characterToExcludeList: [".", ","] }) {
+// excluding a list of caracter from being typed
+function excludeCharacter(input, options = { characterToExcludeList: [".", ","]}) {
   let { characterToExcludeList } = options;
 
-  let characterRegExp = new RegExp(`[${characterToExcludeList.join("")}]`, "g");
+  let characterRegExp = new RegExp(`[${characterToExcludeList.join("")}]$`, "g");
+  
   return input.replace(characterRegExp, "");
 }
 
-function sanitizeHourInput(hours, options = { min: 0, max: 99, length: 2, border: "end", characterToExcludeList: [".", ","] }) {
+// validate hour input field 
+function validateHourInput(hours, options = { min: 0, max: 99, length: 2, border: "end", characterToExcludeList: [".", ","] }) {
 
   return truncateInput(limitInputValue(excludeCharacter(hours, options), options), options);
 }
 
-function sanitizeMinuteInput(minutes, options = { min: 0, max: 59, length: 2, border: "end", characterToExcludeList: [".", ","] }) {
+// validate minute input field 
+function validateMinuteInput(minutes, options = { min: 0, max: 59, length: 2, border: "end", characterToExcludeList: [".", ","]}) {
 
   return truncateInput(limitInputValue(excludeCharacter(minutes, options), options), options);
 }
 
-function sanitizeSecondInput(seconds, options = { min: 0, max: 59, length: 2, border: "end", characterToExcludeList: [".", ","] }) {
+// validate second input field 
+function validateSecondInput(seconds, options = { min: 0, max: 59, length: 2, border: "end", characterToExcludeList: [".", ","] }) {
 
   return truncateInput(limitInputValue(excludeCharacter(seconds, options), options), options);
 }
 
-export {sanitizeHourInput, sanitizeMinuteInput, sanitizeSecondInput};
+// Prepend missing zero to acheive an expected length
+function prependMissingZeros(input, requiredLength = 2) {
+  
+  let processedInput = "";
+  let inputLength = String(input).length || 0;
+  
+  let margin = requiredLength - inputLength;
+  
+  if (margin > 0) {
+    while (margin > 0) {
+    processedInput += "0";
+    margin--;
+    }
+    processedInput += input;
+  } else {
+    processedInput += input;
+  }
+  return processedInput;
+}
+
+export { validateHourInput, validateMinuteInput, validateSecondInput, prependMissingZeros };

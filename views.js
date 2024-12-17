@@ -47,7 +47,7 @@ class MiniView {
 
 class View {
   static timerHTML = `
-    <div class="display rounded-corner">
+    <div class="display">
      <div class="title-container">
      <p class="title" ></p>
      </div>
@@ -55,7 +55,24 @@ class View {
      <hr/>
       <div class="screen">
        <div class="time">
-        <span class="hours time-unit" name="hours"></span>:<span class="minutes time-unit" name="minutes"></span>:<span class="seconds time-unit" name="seconds"></span>.<span class="partials time-unit"></span>
+       <div>
+       <label>HH</label>
+        <span class="hours time-unit" name="hours"></span>
+        </div>
+        :
+        <div>
+        <label>MM</label>
+        <span class="minutes time-unit" name="minutes"></span>
+        </div>
+        :
+        <div>
+        <label>SS</label>
+        <span class="seconds time-unit" name="seconds"></span>
+        </div>
+        .
+        <div>
+        <span class="partials time-unit"></span>
+        </div>
         </div>
         <hr/>
         <div class="additional-time warning invisible">
@@ -90,6 +107,7 @@ class View {
           <input id="input-second" class="seconds" placeholder="00" size=2 type="number" name="seconds" />
         </div>
       </div>
+      <button class="set-time max-button rounded-corner">Set</button>
     </div>
   `;
 
@@ -140,6 +158,8 @@ class View {
 
     this.inputSecondElement = this.inputTimeModal.querySelector(".seconds");
     this.inputTimeElements = this.inputTimeModal.querySelectorAll("input");
+    
+    this.setTimeButton = this.inputTimeModal.querySelector(".set-time");
     
     this.mount();
 

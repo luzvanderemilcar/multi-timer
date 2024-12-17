@@ -61,9 +61,9 @@ hr {
   padding: 5px 15px;
   grid-area: display;
   justify-self: start;
-  background-color: var(--screen-bg-color, lightgray);
+  background-color: var(--timer-bg-color, lightgray);
+  box-shadow: 0 1px 1px 0 #00000055;
   color: var(--black-color, #000);
-  max-width: 200px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -71,8 +71,10 @@ hr {
 }
 
 .title {
-  font-size: 1rem;
-  margin: 5px auto;
+  text-align: center;
+  margin: 5px auto 10px;
+  background-color: var(--screen-bg-color, darkgray);
+  width: 100%;
 }
 
 div.title p {
@@ -88,52 +90,30 @@ input.title-input {
   border: none;
 }
 
-.input-time-modal {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-color: var(--timer-bg-color, #fff);
-  z-index: 1;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-
-.input-time {
-  margin: auto;
-  padding: 0.5em;
-  box-shadow: 0 1px 1px 0 #00000055;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-}
-
-.input-time .input-item * {
-  display: block;
-  text-align: center;
-}
-
-.input-time input {
-  font-size: 2.5em;
-  margin: 0 0.25em;
-  width: 1.2em;
-  border: none;
-  outline: none;
-  text-align: center;
-  font-weight: 400
-}
-
-
 .screen {
+  text-align: center;
+}
+
+.screen .time {
+  padding-top: 1rem;
+  width: 100%;
+}
+
+.screen .time-unit {
   font-size: 2.5em;
   font-weight: 500;
-  text-align: center;
+  margin-inline: 2.5px;
 }
 
+.screen .time > div {
+  display: inline-block;
+  
+}
 .screen span.partials {
   font-size: 1.75rem
+}
+.time > div > * {
+  display: block
 }
 
 .additional-time {
@@ -155,15 +135,6 @@ input.title-input {
   align-items: center;
 }
 
-.controls>div.timing {
-  width: 75%;
-  grid-area: timing;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-around;
-  align-items: flex-end;
-}
-
 .controls>div.action {
   width: 75%;
   grid-area: action;
@@ -173,7 +144,7 @@ input.title-input {
   align-items: space-between;
 }
 
-.controls button {
+ button {
   width: 40%;
   min-height: 50px;
   min-width: 70px;
@@ -182,7 +153,7 @@ input.title-input {
 }
 
 button.start-pause[next="start"],
-button.start-pause[next="resume"] {
+button.start-pause[next="resume"], button.set-time {
   background-color: var(--primary-color, darkgray);
   color: var(--white-color, white);
 }
@@ -208,6 +179,48 @@ button.decrement {
   font-size: 1.5rem;
 }
 
+/* Input time */
+.input-time-modal {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: var(--timer-bg-color, #fff);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1;
+}
+
+.input-time {
+  margin: auto;
+  padding: 0.5em;
+  box-shadow: 0 1px 1px 0 #00000055;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.input-time .input-item {
+  text-align: center
+}
+
+.input-time .input-item > * {
+  display: block;
+}
+
+.input-time input {
+  font-size: 2.5em;
+  margin: 0 0.25em;
+  width: 1.2em;
+  border: none;
+  outline: none;
+  text-align: center;
+  font-weight: 400
+}
+
+/* Utilities Classes */
 
 .hidden {
   display: none !important;
@@ -222,7 +235,7 @@ button.decrement {
 }
 
 .highlight {
-  background-color: darkgray;
+  background-color: var(--input-bg-color, lightgray);
 }
 
 .rounded-corner {
