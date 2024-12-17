@@ -210,6 +210,7 @@ export default class Timer {
       // save time input 
       this.view.inputTimeModal.addEventListener("click", (e) => {
         if (!e.target.closest("div.input-time")) {
+       
           let hours = this.view.inputHourElement.value;
           let minutes = this.view.inputMinuteElement.value;
           let seconds = this.view.inputSecondElement.value;

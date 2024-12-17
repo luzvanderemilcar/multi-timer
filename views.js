@@ -73,13 +73,24 @@ class View {
         <button class="reset hidden rounded-corner">Reset</button>
       </div>
     </div>
-      <div class="input-time-modal hidden">
-       <div class="input-time " >
-        <input class="hours" type="number" placeholder="00" name="hours" size=2 min=0 max=99 />:
-          <input class="minutes" placeholder="00" size=2 type="number" name="minutes" />:
-          <input class="seconds" placeholder="00" size=2 type="number" name="seconds" />
+    <div class="input-time-modal hidden">
+      <div class="input-time ">
+        <div class="input-item">
+          <label for="input-hour">HH</label>
+          <input id="input-hour" class="hours" type="number" placeholder="00" name="hours" size=2 min=0 max=99 />
+        </div>
+        :
+        <div class="input-item">
+          <label for="input-minute">MM</label>
+          <input id="input-minute" class="minutes" placeholder="00" size=2 type="number" name="minutes" />
+        </div>
+        :
+        <div class="input-item">
+          <label for="input-second">SS</label>
+          <input id="input-second" class="seconds" placeholder="00" size=2 type="number" name="seconds" />
         </div>
       </div>
+    </div>
   `;
 
   constructor() {
