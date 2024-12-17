@@ -23,7 +23,7 @@ export default class Counter {
 
   getPartialsDetails() {
     if (!this.partialsType) {
-      this.partialsType = 'tenth'; // tenth | hundredth | thousandth
+      this.partialsType = 'tenth'; // none | tenth | hundredth | thousandth
     }
 
     if (!this.#partialsDetails) {
@@ -32,6 +32,12 @@ export default class Counter {
       let value, maximum, minimum, zeros, partialsPerSecond, maximumCount;
 
       switch (this.partialsType) {
+        case "none" :
+          value = 1;
+          maximum = 1;
+          zeros = "";
+          partialsPerSecond = 1;
+          break;
         case 'tenth':
           value = .1;
           maximum = 10;

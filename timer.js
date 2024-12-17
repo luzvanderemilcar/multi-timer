@@ -1,6 +1,6 @@
 import Counter from "/counter.js"
-import {View, MiniView} from "/views.js"
-import {sanitizeHourInput, sanitizeMinuteInput, sanitizeSecondInput} from "/utils.js";
+import { View, MiniView } from "/views.js"
+import { sanitizeHourInput, sanitizeMinuteInput, sanitizeSecondInput } from "/utils.js";
 
 export default class Timer {
   #timerId;
@@ -73,8 +73,8 @@ export default class Timer {
 
     //if the view is maximum
     if (this.view.viewIsMaximum) {
-      //the timer has paused after being started 
 
+      //the timer has paused after being started 
       if (this.hasStarted && this.hasPaused) {
         this.view.restoreStartPause();
         this.view.startPauseButtonNext("resume");
@@ -88,7 +88,7 @@ export default class Timer {
       else if (!this.hasStarted) {
         this.view.reinitDisplay();
       }
-
+      // the time is over
       else if (this.hasTimeFinished) {
         this.view.startPauseButtonNext("stop");
       }
@@ -111,7 +111,9 @@ export default class Timer {
   // sense = increment | decrement 
   changeBy(timeUnit = "minutes", sense = "increment") {
     this.clearTimer();
+
     let count = this.counter.getCount();
+
     let partialsDetails = this.counter.getPartialsDetails();
     let { remainingPartials: partials } = this.getTime(count, partialsDetails);
 
@@ -177,29 +179,26 @@ export default class Timer {
       const setScreenHighlight = (e) => {
         let element = e.target;
         let timeUnit = element.getAttribute("name");
-
-        this.view.screenElement.setAttribute("highlight", timeUnit);
-        // remove highlight from time unit if any
-        this.view.removeScreenHighLight();
-        element.classList.add("highlight");
         this.view.showTimingControls();
+
+        //set the current value of the inputs
+        this.view.inputTimeElements.forEach(inputElement => {
+          let inputTimeUnit = inputElement.getAttribute("name");
+          let caughtValue = this.getTimeValue(inputTimeUnit);
+          inputElement.value = caughtValue;
+
+          if (timeUnit == inputTimeUnit) {
+            inputElement.focus();
+          }
+     
+        });
       }
       // add screen highlight for all time unit element out of partials
       this.view.timeElements.forEach(elem => {
-        if (!elem.classList.contains("partials")) elem.addEventListener("dblclick", setScreenHighlight);
+        if (!elem.classList.contains("partials")) elem.addEventListener("click", setScreenHighlight);
       });
 
       // controls 
-      this.view.incrementButton.addEventListener("click", (e) => {
-        //get te value of the highlighted time unit
-        let timeUnit = this.view.screenElement.getAttribute("highlight");
-        this.increment(timeUnit);
-      });
-
-      this.view.decrementButton.addEventListener("click", (e) => {
-        let timeUnit = this.view.screenElement.getAttribute("highlight");
-        this.decrement(timeUnit);
-      });
 
       this.view.startPauseButton.addEventListener("click", () => {
         this.startPause();
@@ -208,6 +207,60 @@ export default class Timer {
       this.view.resetButton.addEventListener("click", () => {
         this.reset();
       });
+      // save time input 
+      this.view.inputTimeModal.addEventListener("click", (e) => {
+        if (!e.target.closest("div.input-time")) {
+          let hours = this.view.inputHourElement.value;
+          let minutes = this.view.inputMinuteElement.value;
+          let seconds = this.view.inputSecondElement.value;
+          
+          this.setCountFromTime(hours, minutes, seconds);
+          
+          this.view.hideInputTimeModal()
+        }
+      });
+
+      // input hour
+      this.view.inputTimeElements.forEach(inputElement => {
+        inputElement.addEventListener("focus", (e) => {
+          let element = e.target;
+
+          if (!element.classList.contains("highlight")) {
+            element.classList.add("highlight");
+            element.select();
+          }
+        });
+
+        inputElement.addEventListener("input", (e) => {
+          let element = e.target;
+          let timeUnit = element.getAttribute("name");
+          let processedValue;
+
+          switch (timeUnit) {
+            case 'hours':
+              processedValue = sanitizeHourInput(element.value);
+              break;
+
+            case 'minutes':
+              processedValue = sanitizeMinuteInput(element.value);
+              break;
+
+            case 'seconds':
+              processedValue = sanitizeSecondInput(element.value);
+              break;
+          }
+          element.value = processedValue;
+
+        });
+
+        inputElement.addEventListener("blur", (e) => {
+          let element = e.target;
+          if (element.classList.contains("highlight")) {
+            element.classList.remove("highlight")
+          }
+        });
+      });
+
     } else {
       // listeners for mini view
       this.view.miniTimerElement.addEventListener("click", this.maximizeView);
@@ -221,6 +274,49 @@ export default class Timer {
     // Maximize the view of the clicked timer()
     this.changeView();
     Timer.currentTimer = this;
+  }
+
+  getTimeValue(timeUnit = "minutes", type = "string") {
+    let timeValues = this.getTime(this.counter.getCount(), this.counter.getPartialsDetails());
+
+    let value;
+
+    switch (timeUnit) {
+      case 'hours':
+        value = timeValues.hoursFormatted;
+        break;
+      case 'minutes':
+        value = timeValues.minutesFormatted;
+        break;
+      case 'seconds':
+        value = timeValues.secondsFormatted;
+        break;
+      case 'partials':
+        value = timeValues.partialsFormatted;
+        break;
+
+    }
+
+    if (type === "number") value = parseInt(value);
+
+    return value;
+  }
+
+  setCountFromTime(hours, minutes, seconds, partials = 0) {
+    let { partialsPerSecond } = this.counter.getPartialsDetails();
+
+    let hoursCount = Number(hours) * 3600 * partialsPerSecond;
+    let minutesCount = Number(minutes) * 60 * partialsPerSecond;
+    let secondsCount = Number(seconds) * partialsPerSecond;
+
+    let newCount = hoursCount + minutesCount + secondsCount + Number(partials);
+
+    this.counter.setCount(newCount);
+
+    // Reinit state
+    this.displayTime();
+    this.view.startPauseButtonNext("start");
+    this.reinit();
   }
 
   // display the time on the screen according to the current count
@@ -266,6 +362,8 @@ export default class Timer {
     let partialsString;
 
     switch (partialsType) {
+      case "none":
+        partialsString = "";
       case 'tenth':
         partialsString = hasTimeNotFinished ? `${partialsCount}` : partialsZeros;
         break;
@@ -519,7 +617,6 @@ export default class Timer {
     this.displayTime();
 
     if (this.view.viewIsMaximum) {
-      this.view.removeScreenHighLight();
       this.view.restoreResetButton();
       this.view.startPauseButtonNext("start");
     }

@@ -7,7 +7,8 @@ function initializeStoredTimers(storedTiners) {
   });
 }
 
-let timer1 = new Timer(1, "etoile");
+// set first timer
+(()=>{new Timer(356)})();
 
 const timerList = document.querySelector(".timer-list");
 const addTimer = document.querySelector(".add-timer");
@@ -15,6 +16,6 @@ const addTimer = document.querySelector(".add-timer");
 addTimer.addEventListener("click", setNewTimer);
 
 function setNewTimer() {
-  Timer.currentTimer.changeView();
+  Timer.currentTimer?.changeView();
   new Timer();
 }

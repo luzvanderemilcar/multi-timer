@@ -73,11 +73,11 @@ class View {
         <button class="reset hidden rounded-corner">Reset</button>
       </div>
     </div>
-      <div class="input-time-modal">
+      <div class="input-time-modal hidden">
        <div class="input-time " >
-        <input class="hours" type="number" name="hours" size=2 min=0 max=99 />:
-          <input class="minutes" size=2 type="number" name="minutes" />:
-          <input class="seconds" size=2 type="number" name="seconds" />
+        <input class="hours" type="number" placeholder="00" name="hours" size=2 min=0 max=99 />:
+          <input class="minutes" placeholder="00" size=2 type="number" name="minutes" />:
+          <input class="seconds" placeholder="00" size=2 type="number" name="seconds" />
         </div>
       </div>
   `;
@@ -116,25 +116,20 @@ class View {
 
     //Timer control elements
     this.controls = this.timerElement.querySelector(".controls");
-    this.timingControls = this.controls.querySelector(".timing");
 
     this.startPauseButton = this.controls.querySelector("button.start-pause");
     this.resetButton = this.controls.querySelector("button.reset");
 
-    this.incrementButton = this.controls.querySelector("button.increment");
-    this.decrementButton = this.controls.querySelector("button.decrement");
-
     this.inputTimeModal = this.timerElement.querySelector(".input-time-modal");
     this.inputTimeInputContainer = this.inputTimeModal.querySelector(".input-time ");
 
-    this.hourInputElement = this.inputTimeModal.querySelector(".hours");
+    this.inputHourElement = this.inputTimeModal.querySelector(".hours");
 
-    this.minuteInputElement = this.inputTimeModal.querySelector(".minutes");
+    this.inputMinuteElement = this.inputTimeModal.querySelector(".minutes");
 
-    this.secondInputElement = this.inputTimeModal.querySelector(".seconds");
+    this.inputSecondElement = this.inputTimeModal.querySelector(".seconds");
+    this.inputTimeElements = this.inputTimeModal.querySelectorAll("input");
     
-    this.hideInputModal()
-
     this.mount();
 
   }
@@ -165,7 +160,7 @@ class View {
     this.hourElement.innerHTML = hoursFormatted;
     this.minuteElement.innerHTML = minutesFormatted;
     this.secondElement.innerHTML = secondsFormatted;
-    if (affectPartials) this.updatePartials(partialsFormatted);
+    if (affectPartials && partialsFormatted) this.updatePartials(partialsFormatted);
   }
 
   updatePartials(partialsString) {
@@ -179,23 +174,21 @@ class View {
   reinitDisplay() {
     this.screenElement.classList.remove("warning");
     this.maximizeStartPause();
-    // this.updateAdditionalTime({ timeFormatted: "-00:00" });
   }
 
   // set the display to that of a running timer
   runningDisplay() {
-    this.removeScreenHighLight();
-    this.hideTimingControls();
     this.restoreStartPause();
     this.startPauseButtonNext("pause");
   }
 
   //remove the class highlight from the time-unit elements
-  removeScreenHighLight() {
-    this.timeElements.forEach(elem => {
-      if (elem.classList.contains("highlight")) elem.classList.remove("highlight");
-    });
-  }
+
+removeInputTimeHighLight() {
+  this.inputTimeElements.forEach(elem => {
+    if (elem.classList.contains("highlight")) elem.classList.remove("highlight");
+  });
+}
 
   // hide element while keeping its space on the documen
   makeInvisible(element) {
@@ -224,10 +217,11 @@ class View {
   }
   // Hide and show increment and decrement buttons
   hideTimingControls() {
-    this.hide(this.timingControls);
+    this.hideInputTimeModal()
   }
+  
   showTimingControls() {
-    this.show(this.timingControls);
+   this.showInputTimeModal()
   }
 
   // maximize the startpause button as for the initial look
@@ -265,11 +259,11 @@ class View {
   }
   
   // Input time
-  hideInputModal() {
+  hideInputTimeModal() {
     this.hide(this.inputTimeModal);
   }
   
-  showInputModal() {
+  showInputTimeModal() {
     this.show(this.inputTimeModal);
   }
 }

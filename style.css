@@ -92,7 +92,7 @@ input.title-input {
   position: absolute;
   width: 100%;
 height: 100%;
-background-color: red; /*var(--timer-bg-color, #fff);*/
+background-color: var(--timer-bg-color, #fff);
 z-index: 1;
 display: flex;
 flex-direction: row;

@@ -2,7 +2,8 @@
 function truncateInput(input, options = { length: 0, border: "start" }) {
   let { length, border } = options;
 
-  let inputLength = input.length;
+  if (input) {
+  let inputLength = input?.length;
   
   // If 
   if (length > 0) {
@@ -11,6 +12,7 @@ function truncateInput(input, options = { length: 0, border: "start" }) {
     if (border == "start") return input.slice(0, length);
   }
   return input
+  }
 }
 
 function limitInputValue(input, options = { min: 0, max: 50 }) {
@@ -31,6 +33,8 @@ function limitInputValue(input, options = { min: 0, max: 50 }) {
       limitedValue = min
     }
     return String(limitedValue);
+  } else {
+    return "00"
   }
 }
 
