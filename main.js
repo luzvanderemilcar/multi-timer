@@ -8,7 +8,11 @@ function initializeStoredTimers(storedTiners) {
 }
 
 // set first timer
-(()=>{new Timer(356)})();
+(()=>{
+  new Timer(105, "Reyinyon").changeView();
+  new Timer(.5, "Komantè").changeView();
+  new Timer(10, "Diskou");
+})();
 
 const timerList = document.querySelector(".timer-list");
 const addTimer = document.querySelector(".add-timer");

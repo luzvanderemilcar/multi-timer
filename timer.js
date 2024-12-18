@@ -615,7 +615,7 @@ export default class Timer {
   #stop() {
     if (this.hasTimeFinished) {
       this.clearTimer();
-      this.#stopBeep();
+      this.#stopBeep(this.audioBeep);
       this.view.maximizeResetButton();
     }
   }

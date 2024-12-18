@@ -1,7 +1,8 @@
 :root {
   /* Colors */
-  --body-bg-color: ;
-  --timer-color: ;
+  --body-bg-color: #fff;
+  --body-color: #000;
+  --timer-color: #000;
   --timer-bg-color: #fff;
   --screen-color: ;
   --screen-bg-color: #BFC0C4A3;
@@ -14,12 +15,29 @@
   --danger-color: #CE2015;
   --white-color: #fff;
   --black-color: #000;
+  
+  /* Dark Color Variables */
+  
+    --body-bg-dkcolor: #312D2D;
+  --body-dkcolor: #FAFAFA;
+  --timer-dkcolor: #FAFAFA;
+  --timer-bg-dkcolor: #312D2D;
+  --screen-dkcolor: ;
+  --screen-bg-dkcolor: #BFC0C4A3;
+  --timerlist-bg-dkcolor: #484848;
+  --input-bg-dkcolor: #E8E8E8;
+  
+  --primary-dkcolor: #6668E6;
+--secondary-dkcolor: #2124AE;
+--info-dkcolor: #908D8D;
+--danger-dkcolor: #FF4034;
+--white-color: #fff;
+--black-color: #000;
 }
 
 body {
   font-size: 12pt;
   height: 100vh;
-  background-color: var(--body-bg-color, #fff);
 }
 
 hr {
@@ -51,8 +69,6 @@ hr {
   max-height: 550px;
   min-height: 250px;
   max-width: 500px;
-  background-color: var(--timer-bg-color, #f5f5f5);
-  color: var(--timer-color, #000);
 }
 
 
@@ -61,9 +77,6 @@ hr {
   padding: 5px 15px;
   grid-area: display;
   justify-self: start;
-  background-color: var(--timer-bg-color, lightgray);
-  box-shadow: 0 1px 1px 0 #00000055;
-  color: var(--black-color, #000);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -73,7 +86,6 @@ hr {
 .title {
   text-align: center;
   margin: 5px auto 10px;
-  background-color: var(--screen-bg-color, darkgray);
   width: 100%;
 }
 
@@ -83,7 +95,6 @@ div.title p {
 
 /* Input title */
 input.title-input {
-  background-color: var(--input-bg-color, #E9E9E9);
   text-align: center;
   width: 70%;
   outline: none;
@@ -105,14 +116,16 @@ input.title-input {
   margin-inline: 2.5px;
 }
 
-.screen .time > div {
+.screen .time>div {
   display: inline-block;
-  
+
 }
+
 .screen span.partials {
-  font-size: 1.75rem
+  font-size: 1.75em
 }
-.time > div > * {
+
+.time>div>* {
   display: block
 }
 
@@ -144,7 +157,8 @@ input.title-input {
   align-items: space-between;
 }
 
- button {
+button {
+  font-size: 1.25em;
   width: 40%;
   min-height: 50px;
   min-width: 70px;
@@ -152,31 +166,9 @@ input.title-input {
   outline: none;
 }
 
-button.start-pause[next="start"],
-button.start-pause[next="resume"], button.set-time {
-  background-color: var(--primary-color, darkgray);
-  color: var(--white-color, white);
-}
-
-button.start-pause[next="pause"] {
-  background-color: var(--info-color, #E8E8E8);
-  color: var(--black-color, black);
-}
-
-button.reset {
-  background-color: var(--danger-color, darkred);
-  color: var(--white-color, white);
-}
-
-button.increment,
-button.decrement {
-  background-color: var(--secondary-color, lightgray);
-  color: var(--black-color, #000);
-}
-
 .max-button {
   width: 75% !important;
-  font-size: 1.5rem;
+  font-size: 1.5em;
 }
 
 /* Input time */
@@ -184,7 +176,6 @@ button.decrement {
   position: absolute;
   width: 100%;
   height: 100%;
-  background-color: var(--timer-bg-color, #fff);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -195,7 +186,6 @@ button.decrement {
 .input-time {
   margin: auto;
   padding: 0.5em;
-  box-shadow: 0 1px 1px 0 #00000055;
   display: flex;
   flex-direction: row;
   justify-content: center;
@@ -206,7 +196,7 @@ button.decrement {
   text-align: center
 }
 
-.input-time .input-item > * {
+.input-time .input-item>* {
   display: block;
 }
 
@@ -220,7 +210,7 @@ button.decrement {
   font-weight: 400
 }
 
-/* Utilities Classes */
+/* Utility Classes */
 
 .hidden {
   display: none !important;
@@ -228,14 +218,6 @@ button.decrement {
 
 .invisible {
   visibility: hidden !important;
-}
-
-.warning {
-  color: var(--danger-color, red) !important;
-}
-
-.highlight {
-  background-color: var(--input-bg-color, lightgray);
 }
 
 .rounded-corner {
@@ -250,7 +232,6 @@ button.decrement {
   width: 100%;
   padding: 5px;
   grid-area: timerlist;
-  background-color: var(--timerlist-bg-color, #fcfcfc);
 }
 
 .timer-list .timer-preview {
@@ -261,8 +242,6 @@ button.decrement {
   flex-direction: column;
   align-items: center;
   justify-content: space-around;
-  background-color: var(--white-color, #f5f5f5);
-  box-shadow: 0 1px 1px 0 #00000025;
 }
 
 .timer-preview .time {
@@ -277,16 +256,170 @@ button.decrement {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--input-bg-color, #e9e9e9);
-  color: var(--primary-color, darkgray);
-  font-size: 3rem;
+  font-size: 3em;
   width: 60px;
   height: 60px;
   border-radius: 50%;
 }
 
 @media (max-height: 200px) {
+  body {
+    font-size: 8pt;
+  }
+
   .details {
     display: none;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background-color: var(--body-bg-color, #fff);
+  }
+
+  .timer {
+    background-color: var(--timer-bg-color, #f5f5f5);
+    color: var(--timer-color, #000);
+  }
+
+
+  .display {
+    background-color: var(--timer-bg-color, lightgray);
+    box-shadow: 0 1px 1px 0 #00000055;
+    color: var(--black-color, #000);
+  }
+
+  .title {
+    background-color: var(--screen-bg-color, darkgray);
+  }
+
+  input.title-input {
+    background-color: var(--input-bg-color, #E9E9E9);
+  }
+
+  button.start-pause[next="start"],
+  button.start-pause[next="resume"],
+  button.set-time {
+    background-color: var(--primary-color, darkgray);
+    color: var(--white-color, white);
+  }
+
+  button.start-pause[next="pause"] {
+    background-color: var(--info-color, #E8E8E8);
+    color: var(--black-color, black);
+  }
+
+  button.reset {
+    background-color: var(--danger-color, darkred);
+    color: var(--white-color, white);
+  }
+
+  button.increment,
+  button.decrement {
+    background-color: var(--secondary-color, lightgray);
+    color: var(--black-color, #000);
+  }
+
+  .input-time-modal {
+    background-color: var(--timer-bg-color, #fff);
+  }
+
+  .input-time {
+    box-shadow: 0 1px 1px 0 #00000055;
+  }
+
+  .warning {
+    color: var(--danger-color, red) !important;
+  }
+
+  .highlight {
+    background-color: var(--input-bg-color, lightgray);
+  }
+
+  .timer-list .timer-preview {
+    color: var(--body-color, #000);
+    background-color: var(--white-color, #f5f5f5);
+    box-shadow: 0 1px 1px 0 #00000025;
+  }
+
+  .add-timer {
+    background-color: var(--input-bg-color, #e9e9e9);
+    color: var(--primary-color, darkgray);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--body-bg-dkcolor, #fff);
+  }
+
+  .timer {
+    background-color: var(--timer-bg-dkcolor, #f5f5f5);
+    color: var(--timer-dkcolor, #000);
+  }
+
+
+  .display {
+    background-color: var(--timer-bg-dkcolor, lightgray);
+    box-shadow: 0 1px 1px 0 #ffffff55;
+    color: var(--white-color, #000);
+  }
+
+  .title {
+    background-color: var(--screen-bg-dkcolor, darkgray);
+  }
+
+  input.title-input {
+    background-color: var(--input-bg-dkcolor, #E9E9E9);
+  }
+
+  button.start-pause[next="start"],
+  button.start-pause[next="resume"],
+  button.set-time {
+    background-color: var(--primary-dkcolor, lightgray);
+    color: var(--light-color, white);
+  }
+
+  button.start-pause[next="pause"] {
+    background-color: var(--info-color, #E8E8E8);
+    color: var(--black-color, black);
+  }
+
+  button.reset {
+    background-color: var(--danger-dkcolor, darkred);
+    color: var(--white-color, white);
+  }
+
+  button.increment,
+  button.decrement {
+    background-color: var(--secondary-dkcolor, lightgray);
+    color: var(--black-color, #000);
+  }
+
+  .input-time-modal {
+    background-color: var(--timer-bg-dkcolor, #fff);
+  }
+
+  .input-time {
+    box-shadow: 0 1px 1px 0 #ffffff55;
+  }
+
+  .warning {
+    color: var(--danger-dkcolor, red) !important;
+  }
+
+  .highlight {
+    background-color: var(--input-bg-dkcolor, lightgray);
+  }
+
+  .timer-list .timer-preview {
+    color: var(--body-dkcolor, #000);
+    background-color: var(--screen-bg-dkcolor-color, #333);
+    box-shadow: 0 1px 1px 0 #ffffff25;
+  }
+
+  .add-timer {
+    background-color: var(--input-bg-dkcolor, #e9e9e9);
+    color: var(--primary-dkcolor, lightgray);
   }
 }
