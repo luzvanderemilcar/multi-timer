@@ -50,7 +50,7 @@ export default class Counter {
           zeros = "00";
           partialsPerSecond = 100;
           break;
-        case 'thousands':
+        case 'thousandth':
           value = .001;
           maximum = 1000;
           zeros = "000";

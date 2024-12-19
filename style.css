@@ -15,10 +15,10 @@
   --danger-color: #CE2015;
   --white-color: #fff;
   --black-color: #000;
-  
+
   /* Dark Color Variables */
-  
-    --body-bg-dkcolor: #312D2D;
+
+  --body-bg-dkcolor: #312D2D;
   --body-dkcolor: #FAFAFA;
   --timer-dkcolor: #FAFAFA;
   --timer-bg-dkcolor: #312D2D;
@@ -26,13 +26,13 @@
   --screen-bg-dkcolor: #BFC0C4A3;
   --timerlist-bg-dkcolor: #484848;
   --input-bg-dkcolor: #E8E8E8;
-  
+
   --primary-dkcolor: #6668E6;
---secondary-dkcolor: #2124AE;
---info-dkcolor: #908D8D;
---danger-dkcolor: #FF4034;
---white-color: #fff;
---black-color: #000;
+  --secondary-dkcolor: #2124AE;
+  --info-dkcolor: #908D8D;
+  --danger-dkcolor: #FF4034;
+  --white-color: #fff;
+  --black-color: #000;
 }
 
 body {
@@ -159,7 +159,7 @@ input.title-input {
 
 button {
   font-size: 1.25em;
-  width: 40%;
+  width: 35%;
   min-height: 50px;
   min-width: 70px;
   border: none;
@@ -178,13 +178,12 @@ button {
   height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   z-index: 1;
 }
 
 .input-time {
-  margin: auto;
   padding: 0.5em;
   display: flex;
   flex-direction: row;
@@ -269,6 +268,12 @@ button {
 
   .details {
     display: none;
+  }
+}
+
+@media (max-width: 300px) {
+  body {
+    font-size: 8pt;
   }
 }
 

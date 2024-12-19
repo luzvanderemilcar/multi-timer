@@ -388,7 +388,7 @@ export default class Timer {
       case 'hundredth':
         partialsString = !hasTimeNotFinished ? partialsZeros : partialsCount > 9 ? `${partialsCount}` : `0${partialsCount}`;
         break;
-      case 'thousands':
+      case 'thousandth':
         partialsString = !hasTimeNotFinished ? partialsZeros : partialsCount > 99 ? `${partialsCount}` : partialsCount > 9 && partialsCount <= 99 ? `0${partialsCount}` : `00${partialsCount}`;
         break;
     }
