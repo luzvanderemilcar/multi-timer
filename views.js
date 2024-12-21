@@ -51,26 +51,28 @@ class View {
      <div class="title-container">
      <p class="title" ></p>
      </div>
+     
+     <!-- Input field to handle the title of the timer -->
      <input class="title-input hidden" type="text" name="title" maxlength=15 pattern=".{,15}" title="timer name should be at most 15 character long"/>
      <hr/>
       <div class="screen">
-       <div class="time">
-       <div>
-       <label>HH</label>
-        <span class="hours time-unit" name="hours"></span>
+       <div class="display-time">
+       <div class="display-item">
+       <label for="hour-display">HH</label>
+        <span id="hour-display" class="hours time-unit" name="hours"></span>
         </div>
-        :
-        <div>
-        <label>MM</label>
-        <span class="minutes time-unit" name="minutes"></span>
+        <span class="separator">:</span>
+        <div class="display-item">
+        <label for="minute-display">MM</label>
+        <span id="minute-display" class="minutes time-unit" name="minutes"></span>
         </div>
-        :
-        <div>
-        <label>SS</label>
-        <span class="seconds time-unit" name="seconds"></span>
+        <span class="separator">:</span>
+        <div class="display-item">
+        <label for="second-display">SS</label>
+        <span id="second-display" class="seconds time-unit" name="seconds"></span>
         </div>
-        .
-        <div>
+        <span class="separator">.</span>
+        <div class="display-item">
         <span class="partials time-unit"></span>
         </div>
         </div>
@@ -93,21 +95,24 @@ class View {
     <div class="input-time-modal hidden">
       <div class="input-time ">
         <div class="input-item">
-          <label for="input-hour">HH</label>
-          <input id="input-hour" class="hours" type="number" placeholder="00" name="hours" size=2 min=0 max=99 />
+          <label for="hour-input">HH</label>
+          <input id="hour-input" class="hours" type="number" placeholder="00" name="hours" size=2 min=0 max=99 />
         </div>
-        :
+       <span class="separator">:</span>
         <div class="input-item">
-          <label for="input-minute">MM</label>
-          <input id="input-minute" class="minutes" placeholder="00" size=2 type="number" name="minutes" />
+          <label for="minute-input">MM</label>
+          <input id="minute-input" class="minutes" placeholder="00" size=2 type="number" name="minutes" />
         </div>
-        :
+        <span class="separator">:</span>
         <div class="input-item">
-          <label for="input-second">SS</label>
-          <input id="input-second" class="seconds" placeholder="00" size=2 type="number" name="seconds" />
+          <label for="second-input">SS</label>
+          <input id="second-input" class="seconds" placeholder="00" size=2 type="number" name="seconds" />
         </div>
       </div>
+      <div class="input-time-controls">
       <button class="set-time max-button rounded-corner">Set</button>
+      <button class="cancel-set-time max-button rounded-corner">Cancel</button>
+      </div>
     </div>
   `;
 

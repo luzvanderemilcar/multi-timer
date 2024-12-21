@@ -105,28 +105,35 @@ input.title-input {
   text-align: center;
 }
 
-.screen .time {
+.screen .display-time {
   padding-top: 1rem;
   width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-end;
 }
 
-.screen .time-unit {
+
+.display-time>div.display-item {
+  display: inline-block;
+}
+
+div.display-item .time-unit {
+  display: block;
   font-size: 2.5em;
   font-weight: 500;
-  margin-inline: 2.5px;
+  margin: 0.2em 0.15em 0;
 }
 
-.screen .time>div {
-  display: inline-block;
-
+.separator {
+  font-size: 1.5em;
+  margin-bottom: 0.25em;
 }
 
 .screen span.partials {
-  font-size: 1.75em
-}
-
-.time>div>* {
-  display: block
+  font-size: 1.75em;
+  margin-bottom: 0.175em;
 }
 
 .additional-time {
@@ -158,7 +165,7 @@ input.title-input {
 }
 
 button {
-  font-size: 1.25em;
+  font-size: 1em;
   width: 35%;
   min-height: 50px;
   min-width: 70px;
@@ -168,7 +175,8 @@ button {
 
 .max-button {
   width: 75% !important;
-  font-size: 1.5em;
+  max-width: 200px;
+  font-size: 1.25em;
 }
 
 /* Input time */
@@ -184,11 +192,11 @@ button {
 }
 
 .input-time {
-  padding: 0.5em;
+  padding: 1em 0.5em;
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
 }
 
 .input-time .input-item {
@@ -201,12 +209,24 @@ button {
 
 .input-time input {
   font-size: 2.5em;
-  margin: 0 0.25em;
+  margin: 0.2em 0.15em 0;
   width: 1.2em;
   border: none;
   outline: none;
   text-align: center;
   font-weight: 400
+}
+
+.input-time-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.input-time-controls button {
+  margin-bottom: .75em;
 }
 
 /* Utility Classes */

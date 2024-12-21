@@ -9,8 +9,9 @@ function initializeStoredTimers(storedTiners) {
 
 // set first timer
 (()=>{
-  new Timer(105, "Reyinyon").changeView();
-  new Timer(.5, "Komantè").changeView();
+  new Timer(105, "Reyinyon");
+  new Timer(.5, "Komantè");
+  new Timer(4, "Lekti an piblik");
   new Timer(10, "Diskou");
 })();
 
