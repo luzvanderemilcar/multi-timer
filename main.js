@@ -9,10 +9,10 @@ function initializeStoredTimers(storedTiners) {
 
 // set first timer
 (()=>{
-  new Timer(105, "Reyinyon");
-  new Timer(.5, "Komantè");
-  new Timer(4, "Lekti an piblik");
-  new Timer(10, "Diskou");
+  new Timer("1:45", "Reyinyon");
+  new Timer("0:30", "Komantè");
+  new Timer("4:00", "Lekti piblik");
+  new Timer("10:00", "Diskou");
 })();
 
 const timerList = document.querySelector(".timer-list");
@@ -21,6 +21,5 @@ const addTimer = document.querySelector(".add-timer");
 addTimer.addEventListener("click", setNewTimer);
 
 function setNewTimer() {
-  Timer.currentTimer?.changeView();
   new Timer();
 }

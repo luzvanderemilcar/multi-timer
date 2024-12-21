@@ -209,6 +209,7 @@ class View {
   // reinitialize the timer display to the start
   reinitDisplay() {
     this.screenElement.classList.remove("warning");
+    this.startPauseButtonNext("start");
     this.maximizeStartPause();
   }
 

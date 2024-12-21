@@ -9,12 +9,14 @@ export default class Timer {
   static timers = [];
   static currentTimer;
 
-  constructor(count = 5, title = "Timer") {
+  constructor(time = "05:00", title = "Timer") {
+    Timer.currentTimer?.changeView();
+    
     Timer.timers.push(this);
     Timer.currentTimer = this;
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
-    this.counter = new Counter(count);
+    this.counter = new Counter(this.minutesFromTime(time));
 
     this.hasStarted = false;
     this.hasTimeFinished = false;
@@ -143,7 +145,6 @@ export default class Timer {
       }
     }
     this.displayTime();
-    this.view.startPauseButtonNext("start");
     this.reinit();
   }
 
@@ -333,7 +334,6 @@ export default class Timer {
 
     // Reinit state
     this.displayTime();
-    this.view.startPauseButtonNext("start");
     this.reinit();
   }
 
@@ -417,6 +417,10 @@ export default class Timer {
     } else {
       throw new Error("Invalid time format !");
     }
+  }
+  
+  minutesFromTime(time) {
+    return this.secondsFromTime(time) / 60;
   }
 
   getTimerId() {
@@ -637,7 +641,6 @@ export default class Timer {
 
     if (this.view.viewIsMaximum) {
       this.view.restoreResetButton();
-      this.view.startPauseButtonNext("start");
     }
   }
 
