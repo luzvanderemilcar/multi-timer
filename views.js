@@ -165,6 +165,7 @@ class View {
     this.inputTimeElements = this.inputTimeModal.querySelectorAll("input");
     
     this.setTimeButton = this.inputTimeModal.querySelector(".set-time");
+    this.cancelSetTimeButton = this.inputTimeModal.querySelector(".cancel-set-time");
     
     this.mount();
 

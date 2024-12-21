@@ -14,6 +14,7 @@ export default class Timer {
     
     Timer.timers.push(this);
     Timer.currentTimer = this;
+    
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
     this.counter = new Counter(this.minutesFromTime(time));
@@ -33,8 +34,9 @@ export default class Timer {
     this.addListeners();
   }
 
-  changeTitle(newTitle) {
-    if (newTitle?.length > 0) this.title = newTitle;
+  changeTitle(newTitle, limit=15) {
+    if (newTitle?.length > 0) this.title = newTitle.slice(0, limit);
+    
     this.view.changeTitle(this.title);
   }
   changeView() {
@@ -180,7 +182,6 @@ export default class Timer {
       const setScreenHighlight = (e) => {
         let element = e.target;
         let timeUnit = element.getAttribute("name");
-        this.clearTimer();
         this.view.showTimingControls();
 
         //set the current value of the inputs
@@ -216,7 +217,9 @@ export default class Timer {
         let hours = this.view.inputHourElement.value;
         let minutes = this.view.inputMinuteElement.value;
         let seconds = this.view.inputSecondElement.value;
-
+        
+//stop the timer
+        this.clearTimer();
         this.setCountFromTime(hours, minutes, seconds);
 
         this.view.hideTimingControls();
@@ -280,6 +283,11 @@ export default class Timer {
       this.view.setTimeButton.addEventListener("click", () => {
         saveInputTime()
       });
+      
+      this.view.cancelSetTimeButton.addEventListener("click", () => {
+        this.view.hideTimingControls()
+      });
+      
     } else {
       // listeners for mini view
       this.view.miniTimerElement.addEventListener("click", this.maximizeView);
