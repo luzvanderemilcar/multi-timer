@@ -9,14 +9,14 @@ export default class Timer {
   static timers = [];
   static currentTimer;
 
-  constructor(time = "05:00", title = "Timer", initAsCurrent=true) {
-    
-   if(initAsCurrent) {
-     Timer.currentTimer?.changeView();
-     Timer.currentTimer = this;
-   }
+  constructor(time = "05:00", title = "Timer", initAsCurrent = true) {
+
+    if (initAsCurrent) {
+      Timer.currentTimer?.changeView();
+      Timer.currentTimer = this;
+    }
     Timer.timers.push(this);
-    
+
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
     this.counter = new Counter(this.minutesFromTime(time));
@@ -26,14 +26,14 @@ export default class Timer {
     this.hasWarned = false;
     this.hasAdditionalTimeEnabled = true;
     this.criticalSecond = 15;
-    
-if (initAsCurrent) {
-    this.maximumView = new View();
-    this.view = this.maximumView;
-} else {
-  this.minimumView = new MiniView();
-  this.view = this.minimumView;
-}
+
+    if (initAsCurrent) {
+      this.maximumView = new View();
+      this.view = this.maximumView;
+    } else {
+      this.minimumView = new MiniView();
+      this.view = this.minimumView;
+    }
 
     this.changeTitle(title);
     this.displayTime();
@@ -41,9 +41,9 @@ if (initAsCurrent) {
     this.addListeners();
   }
 
-  changeTitle(newTitle, limit=15) {
+  changeTitle(newTitle, limit = 15) {
     if (newTitle?.length > 0) this.title = newTitle.slice(0, limit);
-    
+
     this.view.changeTitle(this.title);
   }
   changeView() {
@@ -224,8 +224,8 @@ if (initAsCurrent) {
         let hours = this.view.inputHourElement.value;
         let minutes = this.view.inputMinuteElement.value;
         let seconds = this.view.inputSecondElement.value;
-        
-//stop the timer
+
+        //stop the timer
         this.clearTimer();
         this.setCountFromTime(hours, minutes, seconds);
 
@@ -268,10 +268,10 @@ if (initAsCurrent) {
         inputElement.addEventListener("blur", (e) => {
           let element = e.target;
           let requiredInputLength = Number(element.getAttribute("size"));
-          
+
           // set the value to the exact length 
           element.value = prependMissingZeros(element.value, requiredInputLength);
-          
+
           if (element.classList.contains("highlight")) {
             element.classList.remove("highlight")
           }
@@ -290,11 +290,11 @@ if (initAsCurrent) {
       this.view.setTimeButton.addEventListener("click", () => {
         saveInputTime()
       });
-      
+
       this.view.cancelSetTimeButton.addEventListener("click", () => {
         this.view.hideTimingControls()
       });
-      
+
     } else {
       // listeners for mini view
       this.view.miniTimerElement.addEventListener("click", this.maximizeView);
@@ -433,7 +433,7 @@ if (initAsCurrent) {
       throw new Error("Invalid time format !");
     }
   }
-  
+
   minutesFromTime(time) {
     return this.secondsFromTime(time) / 60;
   }
@@ -443,12 +443,12 @@ if (initAsCurrent) {
     throw new Error("Can't Find Timer ID");
   }
 
-getDefaultTime() {
-  let defaultCount = this.counter.getDefaultCount();
-  let partialsDetails = this.counter.getPartialsDetails();
-  
-  return this.getTime(defaultCount, partialsDetails, true);
-}
+  getDefaultTime() {
+    let defaultCount = this.counter.getDefaultCount();
+    let partialsDetails = this.counter.getPartialsDetails();
+
+    return this.getTime(defaultCount, partialsDetails, true);
+  }
 
   //Format a time object from count
   getTime(count, partialsDetails, showHours = true) {
@@ -543,8 +543,11 @@ getDefaultTime() {
 
   // stop the beep and reset his timing
   #stopBeep(audio) {
-    audio.pause();
-    audio.currentTime = 0;
+    // test if the audio is currently playing before trying to stop it
+    if (!audio?.paused) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
   }
 
   // Visual warning the time is about to end
@@ -650,6 +653,7 @@ getDefaultTime() {
   clearTimer() {
     if (this.#timerId) {
       clearInterval(this.#timerId);
+      this.#stopBeep(this.audioBeep);
       this.#timerId = null;
     }
   }
