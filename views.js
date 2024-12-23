@@ -24,6 +24,7 @@ class MiniView {
 
   mount() {
     document.querySelector(".timer-list").append(this.miniTimerElement);
+    this.miniTimerElement.scrollIntoView(true)
   }
 
   unmount() {

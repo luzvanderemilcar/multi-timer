@@ -101,6 +101,10 @@ export default class Counter {
   saveCount() {
     this.#defaultCount = this.#count;
   }
+  
+  getDefaultCount() {
+    return this.#defaultCount
+  }
 
   setCount(newCount) {
     this.#count = newCount;

@@ -9,11 +9,13 @@ export default class Timer {
   static timers = [];
   static currentTimer;
 
-  constructor(time = "05:00", title = "Timer") {
-    Timer.currentTimer?.changeView();
+  constructor(time = "05:00", title = "Timer", initAsCurrent=true) {
     
+   if(initAsCurrent) {
+     Timer.currentTimer?.changeView();
+     Timer.currentTimer = this;
+   }
     Timer.timers.push(this);
-    Timer.currentTimer = this;
     
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
@@ -24,9 +26,14 @@ export default class Timer {
     this.hasWarned = false;
     this.hasAdditionalTimeEnabled = true;
     this.criticalSecond = 15;
-
+    
+if (initAsCurrent) {
     this.maximumView = new View();
     this.view = this.maximumView;
+} else {
+  this.minimumView = new MiniView();
+  this.view = this.minimumView;
+}
 
     this.changeTitle(title);
     this.displayTime();
@@ -435,6 +442,13 @@ export default class Timer {
     if (this.#timerId) return this.#timerId
     throw new Error("Can't Find Timer ID");
   }
+
+getDefaultTime() {
+  let defaultCount = this.counter.getDefaultCount();
+  let partialsDetails = this.counter.getPartialsDetails();
+  
+  return this.getTime(defaultCount, partialsDetails, true);
+}
 
   //Format a time object from count
   getTime(count, partialsDetails, showHours = true) {
