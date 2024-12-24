@@ -8,14 +8,16 @@ export default class Timer {
   // static store of timers and last instantiated timer to the maximum view as currentTimer
   static timers = [];
   static currentTimer;
-  static removeTimer(timerToRemove) {
-   Timer.timers = Timer?.timers.filter(timer => timer !== timerToRemove);
-  }
+  static lastCurrentTimer;
 
   constructor(time = "05:00", title = "Timer", initAsCurrent = true) {
 
     if (initAsCurrent) {
-      Timer.currentTimer?.changeView();
+      if (Timer.currentTimer) {
+        Timer.lastCurrentTimer = Timer.currentTimer;
+      Timer.currentTimer.changeView()
+      }
+      
       Timer.currentTimer = this;
     }
     Timer.timers.push(this);
@@ -111,7 +113,7 @@ export default class Timer {
     // the timer has passed the critical time to send visual warning 
     if (this.hasWarned) this.#warn();
   }
-
+  
   //Counter Decoration 
   increment(timeUnit = "minutes") {
     this.changeBy(timeUnit);
@@ -307,7 +309,7 @@ export default class Timer {
 
   maximizeView = () => {
     // minimize the view of old timer
-    Timer.currentTimer.changeView();
+    Timer.currentTimer?.changeView();
 
     // Maximize the view of the clicked timer()
     this.changeView();
@@ -445,6 +447,10 @@ export default class Timer {
   getTimerId() {
     if (this.#timerId) return this.#timerId
     throw new Error("Can't Find Timer ID");
+  }
+  
+  getCounterId() {
+    return this.counter?.getId();
   }
 
   getDefaultTime() {
@@ -686,13 +692,14 @@ export default class Timer {
   }
   
   deleteTimer() {
-    this.view.unmount();
-    Counter.removeCounterId(this.counter.getId());
+    let counterId = this.getCounterId()
     
     // test if the timer is the current timer in maximum view
     if (this === Timer.currentTimer) {
      Timer.currentTimer = null
     }
-    Timer.removeTimer(this);
+    this.view.unmount();
+    Counter.idArray = Counter.idArray.filter(id=> id !== counterId);
+    Timer.timers = Timer.timers?.filter(timer => timer.getCounterId() !== counterId);
   }
 }
