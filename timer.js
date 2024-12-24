@@ -5,9 +5,12 @@ import { validateHourInput, validateMinuteInput, validateSecondInput, prependMis
 export default class Timer {
   #timerId;
 
-  // static store of timers and last instantiated timer as currentTimer
+  // static store of timers and last instantiated timer to the maximum view as currentTimer
   static timers = [];
   static currentTimer;
+  static removeTimer(timerToRemove) {
+   Timer.timers = Timer?.timers.filter(timer => timer !== timerToRemove);
+  }
 
   constructor(time = "05:00", title = "Timer", initAsCurrent = true) {
 
@@ -46,6 +49,7 @@ export default class Timer {
 
     this.view.changeTitle(this.title);
   }
+  
   changeView() {
     //Remove the old view from DOM
     this.view.unmount();
@@ -679,5 +683,16 @@ export default class Timer {
 
     // reinitialize the display of the maximum view if active
     if (this.view.viewIsMaximum) this.view.reinitDisplay();
+  }
+  
+  deleteTimer() {
+    this.view.unmount();
+    Counter.removeCounterId(this.counter.getId());
+    
+    // test if the timer is the current timer in maximum view
+    if (this === Timer.currentTimer) {
+     Timer.currentTimer = null
+    }
+    Timer.removeTimer(this);
   }
 }

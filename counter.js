@@ -1,6 +1,9 @@
 export default class Counter {
   // store ids of the counters initialized
   static idArray = [];
+  static removeCounterId(id) {
+   Counter.idArray = Counter.idArray.filter(counterId => counterId !== id);
+  }
   #id;
   #count;
   #defaultCount;
@@ -9,8 +12,7 @@ export default class Counter {
   #partialsDetails;
 
   constructor(initialCount) {
-    this.#id = generateUniqueId(Counter.idArray);
-
+this.setId();
     this.#count = this.calculatePartialsCount(initialCount);
     this.#step = 1;
     this.saveCount();
@@ -20,10 +22,14 @@ export default class Counter {
   getId() {
     return this.#id;
   }
+  
+  async setId() {
+    this.#id = await generateUniqueId(Counter.idArray);
+  }
 
   getPartialsDetails() {
     if (!this.partialsType) {
-      this.partialsType = 'tenth'; // none | tenth | hundredth | thousandth
+      this.partialsType = 'hundredth'; // none | tenth | hundredth | thousandth
     }
 
     if (!this.#partialsDetails) {
@@ -125,13 +131,14 @@ export default class Counter {
 }
 
 // generate a unique number between 0 and a given one based on an array of ids in use.
-function generateUniqueId(idArray, maxId = 1000000) {
+async function generateUniqueId(idArray, maxId = 1000000) {
   let id;
 
   // loop until a unique number is found
   while (!id) {
-    let candidateId = Math.floor(Math.random() * maxId) + 1;
-    if (!idArray.includes(candidateId)) id = candidateId;
+    let candidateId = await Math.floor(Math.random() * maxId) + 1;
+    if (!idArray.includes(candidateId)) id = 
+   await candidateId;
   }
   idArray.push(id);
   return id
