@@ -403,6 +403,7 @@ export default class Timer {
     switch (partialsType) {
       case "none":
         partialsString = "";
+        break;
       case 'tenth':
         partialsString = hasTimeNotFinished ? `${partialsCount}` : partialsZeros;
         break;
@@ -467,7 +468,7 @@ export default class Timer {
     let timeFormatted = "";
     let hours, hoursFormatted, minutes, minutesFormatted, seconds, secondsFormatted, isTimeout;
     let secondsPerHour = 3600;
-    let secondsPerMinutes = 60;
+    let secondsPerMinute = 60;
 
     let remainingPartials;
 
@@ -501,7 +502,7 @@ export default class Timer {
     }
 
     //remaining seconds greater or equal to one minute
-    let minuteFactor = secondsPerMinutes * partialsPerSecond;
+    let minuteFactor = secondsPerMinute * partialsPerSecond;
 
     if (countProcessing / minuteFactor >= 1) {
       minutes = Math.floor(countProcessing / minuteFactor);
@@ -521,10 +522,10 @@ export default class Timer {
       secondsFormatted = "00";
     }
     timeFormatted += secondsFormatted;
+    
+remainingPartials = countProcessing;
 
-
-    let partialsFormatted = this.getPartials(countProcessing, partialsDetails, !isTimeout);
-    remainingPartials = countProcessing;
+    let partialsFormatted = this.getPartials(remainingPartials, partialsDetails, !isTimeout);
 
     return {
       timeFormatted,
@@ -565,7 +566,7 @@ export default class Timer {
     if (this.view.viewIsMaximum) {
       this.view.screenElement.classList.add("warning");
     } else {
-      this.view.miniTimerElement.classList.add("warning");
+      this.view.miniTimeElement.classList.add("warning");
     }
     this.hasWarned = true;
   }

@@ -24,7 +24,7 @@ export default class Counter {
 
   getPartialsDetails() {
     if (!this.partialsType) {
-      this.partialsType = 'hundredth'; // none | tenth | hundredth | thousandth
+      this.partialsType = 'tenth'; // none | tenth | hundredth | thousandth
     }
 
     if (!this.#partialsDetails) {
