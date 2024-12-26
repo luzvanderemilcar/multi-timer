@@ -24,18 +24,18 @@ export default class Timer {
     }
     Timer.timers.push(this);
 
-    this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
-
     this.counter = new Counter(this.timeUnitFromTime(time, "partials"));
 
     this.hasStarted = false;
     this.hasTimeFinished = false;
     this.hasWarned = false;
     this.hasAdditionalTimeEnabled = true;
+    this.titleLength = 25;
     this.criticalSecond = 15;
     this.beepDurationSecond = 10;
-    this.displayPartials = true;
+    this.showPartials = true;
     
+    this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
     if (initAsCurrent) {
       this.maximumView = new View();
@@ -96,8 +96,9 @@ export default class Timer {
   return this.#partialsDetails;
 }
 
-  changeTitle(newTitle, limit = 15) {
-    if (newTitle?.length > 0) this.title = newTitle.slice(0, limit);
+  changeTitle(newTitle) {
+    // if value entered is not empty
+    if (newTitle?.length > 0) this.title = newTitle.slice(0, this.titleLength);
 
     this.view.changeTitle(this.title);
   }

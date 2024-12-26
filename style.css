@@ -35,13 +35,21 @@
   --black-color: #000;
 }
 
+* {
+  margin: 0;
+}
+
 body {
   font-size: 12pt;
+}
+
+main {
   height: 100vh;
+  text-align : center;
 }
 
 hr {
-  margin: 0;
+  margin-top: 5px;
   min-width: 70%
 }
 
@@ -83,10 +91,8 @@ hr {
   align-items: center;
 }
 
-.title {
-  text-align: center;
-  margin: 5px auto 10px;
-  width: 100%;
+.timer .title-container {
+  min-width: 70%
 }
 
 div.title p {
@@ -95,18 +101,16 @@ div.title p {
 
 /* Input title */
 input.title-input {
-  text-align: center;
   width: 70%;
+  text-align: inherit;
+  font-size: 1em;
   outline: none;
   border: none;
 }
 
-.screen {
-  text-align: center;
-}
-
 .screen .display-time {
   padding-top: 1rem;
+  margin-bottom: 0.25em;
   width: 100%;
   display: flex;
   flex-direction: row;
@@ -199,10 +203,6 @@ button {
   align-items: flex-end;
 }
 
-.input-time .input-item {
-  text-align: center
-}
-
 .input-time .input-item>* {
   display: block;
 }
@@ -213,7 +213,6 @@ button {
   width: 1.2em;
   border: none;
   outline: none;
-  text-align: center;
   font-weight: 400
 }
 
@@ -263,7 +262,6 @@ button.more-setting {
 .setting-item input[type="number"] {
   display: block;
   font-weight: 500;
-  text-align : center;
   width: 1.5em
 }
 /* Utility Classes */
@@ -300,9 +298,22 @@ button.more-setting {
   justify-content: space-around;
 }
 
+.timer-preview .title-container {
+  max-width: 80px;
+  overflow-x: scroll;
+  padding: 0.25em;
+}
+
+.title-container .title {
+  white-space: nowrap;
+}
+
+.timer-preview .display-time {
+  margin: 0.5em;
+}
+
 .timer-preview .time {
   font-size: .75;
-  margin: 0;
 }
 
 .add-timer {
@@ -351,7 +362,7 @@ button.more-setting {
     color: var(--black-color, #000);
   }
 
-  .title {
+  .title-container {
     background-color: var(--screen-bg-color, darkgray);
   }
 

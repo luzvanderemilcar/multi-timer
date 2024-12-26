@@ -1,7 +1,11 @@
 class MiniView {
   static miniTimerHTML = `
-      <p class="title">timer</p>
+      <div class="title-container">
+      <p class="title"></p>
+      </div>
+      <div class="display-time">
       <p class="time"></p>
+      </div>
   `;
 
   constructor() {
@@ -54,7 +58,7 @@ class View {
      </div>
      
      <!-- Input field to handle the title of the timer -->
-     <input class="title-input hidden" type="text" name="title" maxlength=15 pattern=".{,15}" title="timer name should be at most 15 character long"/>
+     <input class="title-input hidden" type="text" name="title" />
      <hr/>
       <div class="screen">
        <div class="display-time">
@@ -159,6 +163,8 @@ class View {
 
 
   initView() {
+    this.timerContainer = document.querySelector("main");
+    
     this.timerElement = document.createElement("div");
 
     this.timerElement.innerHTML = View.timerHTML;
@@ -211,17 +217,17 @@ class View {
 
   mount() {
     // select the existing timer if any
-    let activeTimerElement = document.querySelector(".timer");
+    let activeTimerElement = this.timerContainer.querySelector(".timer");
 
     //remove the existing timer before adding the new one
     if (activeTimerElement) {
-      document.body.removeChild(activeTimerElement);
+      this.timerContainer.removeChild(activeTimerElement);
     }
-    document.body.appendChild(this.timerElement);
+    this.timerContainer.appendChild(this.timerElement);
   }
 
   unmount() {
-    document.body.removeChild(this.timerElement);
+    this.timerContainer.removeChild(this.timerElement);
   }
 
   changeTitle(newTitle) {
