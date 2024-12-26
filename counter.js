@@ -6,12 +6,10 @@ export default class Counter {
   #count;
   #defaultCount;
   #step;
-  #partials;
-  #partialsDetails;
 
   constructor(initialCount) {
     this.getId();
-    this.#count = this.calculatePartialsCount(initialCount);
+    this.#count = initialCount;
     this.#step = 1;
     this.saveCount();
   }
@@ -20,58 +18,6 @@ export default class Counter {
   getId() {
     if (!this.#id) this.#id = generateUniqueId(Counter.idArray);
     return this.#id;
-  }
-
-  getPartialsDetails() {
-    if (!this.partialsType) {
-      this.partialsType = 'tenth'; // none | tenth | hundredth | thousandth
-    }
-
-    if (!this.#partialsDetails) {
-      let maximumSecond = 359999;
-
-      let value, maximum, minimum, zeros, partialsPerSecond, maximumCount;
-
-      switch (this.partialsType) {
-        case "none":
-          value = 1;
-          maximum = 1;
-          zeros = "";
-          partialsPerSecond = 1;
-          break;
-        case 'tenth':
-          value = .1;
-          maximum = 10;
-          zeros = "0";
-          partialsPerSecond = 10;
-          break;
-        case 'hundredth':
-          value = .01;
-          maximum = 100;
-          zeros = "00";
-          partialsPerSecond = 100;
-          break;
-        case 'thousandth':
-          value = .001;
-          maximum = 1000;
-          zeros = "000";
-          partialsPerSecond = 1000;
-          break;
-
-      }
-      maximumCount = maximumSecond * partialsPerSecond;
-
-      this.#partialsDetails = { value, type: this.partialsType, maximum, minimum: 1, zeros, partialsPerSecond, maximumCount };
-    }
-    return this.#partialsDetails;
-  }
-
-  calculatePartialsCount(count) {
-    let { partialsPerSecond } = this.getPartialsDetails();
-    let secondsPerMinute = 60;
-    let partialsCount = count * secondsPerMinute * partialsPerSecond;
-
-    return partialsCount
   }
 
   // Counter manipulations

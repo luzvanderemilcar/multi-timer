@@ -4,6 +4,8 @@ import { validateHourInput, validateMinuteInput, validateSecondInput, prependMis
 
 export default class Timer {
   #timerId;
+  #partials;
+  #partialsDetails;
 
   // static store of timers and last instantiated timer to the maximum view as currentTimer
   static timers = [];
@@ -24,13 +26,16 @@ export default class Timer {
 
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
-    this.counter = new Counter(this.minutesFromTime(time));
+    this.counter = new Counter(this.timeUnitFromTime(time, "partials"));
 
     this.hasStarted = false;
     this.hasTimeFinished = false;
     this.hasWarned = false;
     this.hasAdditionalTimeEnabled = true;
     this.criticalSecond = 15;
+    this.beepDurationSecond = 10;
+    this.displayPartials = true;
+    
 
     if (initAsCurrent) {
       this.maximumView = new View();
@@ -45,6 +50,51 @@ export default class Timer {
 
     this.addListeners();
   }
+  
+  // Init timer 
+  getPartialsDetails() {
+  if (!this.partialsType) {
+    this.partialsType = 'tenth'; // none | tenth | hundredth | thousandth
+  }
+
+  if (!this.#partialsDetails) {
+    let maximumSecond = 359999;
+
+    let value, maximum, minimum, zeros, partialsPerSecond, maximumCount;
+
+    switch (this.partialsType) {
+      case "none":
+        value = 1;
+        maximum = 1;
+        zeros = "";
+        partialsPerSecond = 1;
+        break;
+      case 'tenth':
+        value = .1;
+        maximum = 10;
+        zeros = "0";
+        partialsPerSecond = 10;
+        break;
+      case 'hundredth':
+        value = .01;
+        maximum = 100;
+        zeros = "00";
+        partialsPerSecond = 100;
+        break;
+      case 'thousandth':
+        value = .001;
+        maximum = 1000;
+        zeros = "000";
+        partialsPerSecond = 1000;
+        break;
+
+    }
+    maximumCount = maximumSecond * partialsPerSecond;
+
+    this.#partialsDetails = { value, type: this.partialsType, maximum, minimum: 1, zeros, partialsPerSecond, maximumCount };
+  }
+  return this.#partialsDetails;
+}
 
   changeTitle(newTitle, limit = 15) {
     if (newTitle?.length > 0) this.title = newTitle.slice(0, limit);
@@ -131,7 +181,7 @@ export default class Timer {
 
     let count = this.counter.getCount();
 
-    let partialsDetails = this.counter.getPartialsDetails();
+    let partialsDetails = this.getPartialsDetails ();
     let { remainingPartials: partials } = this.getTime(count, partialsDetails);
 
     let { partialsPerSecond, maximumCount } = partialsDetails;
@@ -317,7 +367,7 @@ export default class Timer {
   }
 
   getTimeValue(timeUnit = "minutes", type = "string") {
-    let timeValues = this.getTime(this.counter.getCount(), this.counter.getPartialsDetails());
+    let timeValues = this.getTime(this.counter.getCount(), this.getPartialsDetails ());
 
     let value;
 
@@ -343,7 +393,7 @@ export default class Timer {
   }
 
   setCountFromTime(hours, minutes, seconds, partials = 0) {
-    let { partialsPerSecond } = this.counter.getPartialsDetails();
+    let { partialsPerSecond } = this.getPartialsDetails ();
 
     let hoursCount = Number(hours) * 3600 * partialsPerSecond;
     let minutesCount = Number(minutes) * 60 * partialsPerSecond;
@@ -362,7 +412,7 @@ export default class Timer {
   displayTime() {
 
     let count = this.counter.getCount();
-    let partialsDetails = this.counter.getPartialsDetails();
+    let partialsDetails = this.getPartialsDetails ();
     let timeInfos = this.getTime(count, partialsDetails);
 
     // boolean to show hours or not based on the view sisze
@@ -418,8 +468,8 @@ export default class Timer {
     return partialsString;
   }
 
-  secondsFromTime(time) {
-
+  timeUnitFromTime(time, timeUnit="seconds") {
+    
     let timeRegExp = /^(?<hours>\d{1,2}):(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<seconds>\d{1,2})$/;
 
     const resultGroups = time.match(timeRegExp)?.groups;
@@ -433,8 +483,25 @@ export default class Timer {
       if (minutes) timerCountInSeconds += parseInt(minutes) * 60;
       if (seconds) timerCountInSeconds += parseInt(seconds);
 
+let result;
+
+switch (timeUnit) {
+  case 'hours':
+result = timerCountInSeconds / 3600 
+    break;
+  case 'minutes':
+result = timerCountInSeconds / 60
+break;
+case 'seconds':
+result = timerCountInSeconds;
+break;
+case 'partials':
+  let {partialsPerSecond } = this.getPartialsDetails();
+result = timerCountInSeconds * partialsPerSecond;
+break;
+}
       //set #count in seconds
-      return timerCountInSeconds;
+      return result;
 
     } else {
       throw new Error("Invalid time format !");
@@ -456,7 +523,7 @@ export default class Timer {
 
   getDefaultTime() {
     let defaultCount = this.counter.getDefaultCount();
-    let partialsDetails = this.counter.getPartialsDetails();
+    let partialsDetails = this.getPartialsDetails ();
 
     return this.getTime(defaultCount, partialsDetails, true);
   }
@@ -593,7 +660,7 @@ remainingPartials = countProcessing;
 
   //run the timer whenever it is called 
   #runTimer() {
-    let { value: partialsValue, maximum: partialsMax } = this.counter.getPartialsDetails();
+    let { value: partialsValue, maximum: partialsMax } = this.getPartialsDetails ();
 
     let criticalCount = this.criticalSecond * partialsMax;
 

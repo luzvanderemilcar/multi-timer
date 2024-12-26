@@ -115,7 +115,42 @@ class View {
       <button class="cancel-set-time max-button rounded-corner">Cancel</button>
       </div>
     </div>
-  `;
+    <button class="more-setting">:</button>
+    <div class="setting-modal hidden">
+      <div class="setting-container">
+       <form class="setting">
+        <fieldset>
+          <legend>Display partials</legend>
+        <div class="setting-item">
+          <input id="show-partials" type="radio" name="partialsSwitch" value="true" checked>
+          <label for="show-partials">Show</label>
+          <input id="hide-partials" type="radio" name="partialsSwitch" value="false">
+          <label for="hide-partials">Hide</label>
+        </div>
+        <div class="setting-item">
+          <select name="partialsType">
+            <option value="tenth" checked>Tenth (0)</option>
+            <option value="hundredth">Hundredth (00)</option>
+            <option value="thousandth">Thousandth (000)</option>
+          </select>
+        </div>
+        </fieldset>
+        <hr/>
+        <fieldset>
+          <legend>Warning</legend>
+          <div class="setting-item">
+            <label for="warning-start-input">Visual warning (at seconds)</label>
+            <input id="warning-start-input" name="visualWarningDuration" type="number" value="15" />
+          </div>
+          <div class="setting-item">
+            <label for="beep-duration-input">Beep duration (in seconds)</label>
+            <input id="beep-duration-input" name="beepDuration" type="number" value="10" />
+          </div>
+        </fieldset>
+       </form>
+      </div>
+    </div>
+  `;//21/10/96
 
   constructor() {
     this.viewIsMaximum = true;
