@@ -76,8 +76,9 @@ class View {
         <label for="second-display">SS</label>
         <span id="second-display" class="seconds time-unit" name="seconds"></span>
         </div>
-        <span class="separator">.</span>
-        <div class="display-item">
+        
+        <div class="display-item partials-display">
+       <span class="separator partials-separator">.</span>
         <span class="partials time-unit"></span>
         </div>
         </div>
@@ -119,23 +120,34 @@ class View {
       <button class="cancel-set-time max-button rounded-corner">Cancel</button>
       </div>
     </div>
-    <button class="more-setting">:</button>
+    <button class="open-close-setting" next-action="open">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill="currentColor" d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"/></svg>
+      </button>
     <div class="setting-modal hidden">
       <div class="setting-container">
-       <form class="setting">
+       <form class="setting-form">
+        <fieldset>
+          <legend>Display additional time</legend>
+        <div class="setting-item">
+          <input id="enable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="true" checked>
+          <label for="enable-additional-time" >Show</label>
+          <input id="disable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="false">
+          <label for="disable-additional-time" >Hide</label>
+        </div>
+        </fieldset> 
+        <hr/>
         <fieldset>
           <legend>Display partials</legend>
         <div class="setting-item">
-          <input id="show-partials" type="radio" name="partialsSwitch" value="true" checked>
-          <label for="show-partials">Show</label>
-          <input id="hide-partials" type="radio" name="partialsSwitch" value="false">
-          <label for="hide-partials">Hide</label>
+          <input id="enable-partials" type="radio" name="hasPartialsEnabled" value="true">
+          <label for="enable-partials">Show</label>
+          <input id="disable-partials" type="radio" name="hasPartialsEnabled" value="false" checked >
+          <label for="disable-partials">Hide</label>
         </div>
         <div class="setting-item">
-          <select name="partialsType">
+          <select name="partialsType" disabled >
             <option value="tenth" checked>Tenth (0)</option>
             <option value="hundredth">Hundredth (00)</option>
-            <option value="thousandth">Thousandth (000)</option>
           </select>
         </div>
         </fieldset>
@@ -144,17 +156,21 @@ class View {
           <legend>Warning</legend>
           <div class="setting-item">
             <label for="warning-start-input">Visual warning (at seconds)</label>
-            <input id="warning-start-input" name="visualWarningDuration" type="number" value="15" />
+            <input id="warning-start-input" name="visualWarningStart" type="number" value="15" />
           </div>
           <div class="setting-item">
             <label for="beep-duration-input">Beep duration (in seconds)</label>
             <input id="beep-duration-input" name="beepDuration" type="number" value="10" />
           </div>
         </fieldset>
+       <div class="controls">
+        <button type="submit">Save</button>
+        </div>
        </form>
       </div>
     </div>
-  `;//21/10/96
+  `;
+  //21/10/96
 
   constructor() {
     this.viewIsMaximum = true;
@@ -185,6 +201,8 @@ class View {
     this.minuteElement = this.screenElement.querySelector("span.minutes");
     this.secondElement = this.screenElement.querySelector("span.seconds");
     this.partialElement = this.screenElement.querySelector("span.partials");
+    this.partialsContainerElement = this.screenElement.querySelector(".partials-display");
+    
     this.timeElements = this.screenElement.querySelectorAll("span.time-unit");
     this.additionalTimeContainerElement = this.screenElement.querySelector("div.additional-time");
 
@@ -208,6 +226,14 @@ class View {
     
     this.setTimeButton = this.inputTimeModal.querySelector(".set-time");
     this.cancelSetTimeButton = this.inputTimeModal.querySelector(".cancel-set-time");
+    
+    // Setting modal
+    this.settingButton = this.timerElement.querySelector(".open-close-setting");
+    
+   this.settingModal = this.timerElement.querySelector(".setting-modal");
+   this.settingForm = this.settingModal.querySelector(".setting-form");
+   // Warning sections
+   
     
     this.mount();
 
@@ -303,7 +329,24 @@ removeInputTimeHighLight() {
   showTimingControls() {
    this.showInputTimeModal()
   }
-
+  
+  // Setting modal
+  showSettingModal() {
+    this.show(this.settingModal);
+this.settingButton.innerHTML = "X";
+this.settingButton.setAttribute("next-action", "close");
+  }
+  
+hideSettingModal() {
+    this.hide(this.settingModal);
+    this.settingButton.innerHTML = ":";
+    this.settingButton.setAttribute("next-action", "open");
+  }
+  
+  hidePartials() {
+    this.hide(this.partialsContainerElement);
+    }
+    
   // maximize the startpause button as for the initial look
   maximizeStartPause() {
 

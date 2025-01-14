@@ -86,4 +86,42 @@ function prependMissingZeros(input, requiredLength = 2) {
   return processedInput;
 }
 
+class State {
+  
+  #value;
+  constructor(initialValue) {
+    this.#value = initialValue;
+  }
+  
+  getValue() {
+    return this.#value
+  }
+  
+  setValue(value) {
+    this.#value = value 
+  }
+}
+
+function useState(initialValue) {
+  let state = initialValue;
+  
+  function setState(value) {
+    state = value;
+  }
+  
+ function getState() {
+   return state
+ }
+  
+  return [function(){return getState()}, setState];
+}
+
+let a = new State("6");
+
+let [sum, setSum] = useState(6);
+
+setSum(7);
+
+console.log(sum(), a)
+
 export { validateHourInput, validateMinuteInput, validateSecondInput, prependMissingZeros };

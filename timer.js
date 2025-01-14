@@ -17,15 +17,16 @@ export default class Timer {
     if (initAsCurrent) {
       if (Timer.currentTimer) {
         Timer.lastCurrentTimer = Timer.currentTimer;
-      Timer.currentTimer.changeView()
+        Timer.currentTimer.changeView()
       }
-      
+
       Timer.currentTimer = this;
     }
     Timer.timers.push(this);
 
-    this.counter = new Counter(this.timeUnitFromTime(time, "partials"));
+    this.counter = new Counter(this.getTimeUnitFromTime(time, "partials"));
 
+    this.status = "pending"; // pending | running | paused | ended 211096
     this.hasStarted = false;
     this.hasTimeFinished = false;
     this.hasWarned = false;
@@ -33,8 +34,8 @@ export default class Timer {
     this.titleLength = 25;
     this.criticalSecond = 15;
     this.beepDurationSecond = 10;
-    this.showPartials = true;
-    
+    this.hasPartialsEnabled = true;
+
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
     if (initAsCurrent) {
@@ -46,63 +47,103 @@ export default class Timer {
     }
 
     this.changeTitle(title);
+
     this.displayTime();
 
     this.addListeners();
   }
-  
+
   // Init timer 
   getPartialsDetails() {
-  if (!this.partialsType) {
-    this.partialsType = 'tenth'; // none | tenth | hundredth | thousandth
-  }
 
-  if (!this.#partialsDetails) {
-    let maximumSecond = 359999;
-
-    let value, maximum, minimum, zeros, partialsPerSecond, maximumCount;
-
-    switch (this.partialsType) {
-      case "none":
-        value = 1;
-        maximum = 1;
-        zeros = "";
-        partialsPerSecond = 1;
-        break;
-      case 'tenth':
-        value = .1;
-        maximum = 10;
-        zeros = "0";
-        partialsPerSecond = 10;
-        break;
-      case 'hundredth':
-        value = .01;
-        maximum = 100;
-        zeros = "00";
-        partialsPerSecond = 100;
-        break;
-      case 'thousandth':
-        value = .001;
-        maximum = 1000;
-        zeros = "000";
-        partialsPerSecond = 1000;
-        break;
-
+    if (!this.partialsType) {
+      this.partialsType = 'none'; // none | tenth | hundredth | thousandth
     }
-    maximumCount = maximumSecond * partialsPerSecond;
+    
+    if (!this.#partialsDetails || this.settingModifying) {
+      let maximumSecond = 359999;
 
-    this.#partialsDetails = { value, type: this.partialsType, maximum, minimum: 1, zeros, partialsPerSecond, maximumCount };
+      let value, maximum, minimum, zeros, partialsPerSecond, maximumCount;
+
+      switch (this.partialsType) {
+        case "none": {
+          value = 1;
+          maximum = 1;
+          zeros = "";
+          partialsPerSecond = 1;
+          break;
+        }
+        case 'tenth':
+          value = .1;
+          maximum = 10;
+          zeros = "0";
+          partialsPerSecond = 10;
+          break;
+        case 'hundredth':
+          value = .01;
+          maximum = 100;
+          zeros = "00";
+          partialsPerSecond = 100;
+          break;
+        case 'thousandth':
+          value = .001;
+          maximum = 1000;
+          zeros = "000";
+          partialsPerSecond = 1000;
+          break;
+
+      }
+      maximumCount = maximumSecond * partialsPerSecond;
+
+      this.#partialsDetails = { value, type: this.partialsType, maximum, minimum: 1, zeros, partialsPerSecond, maximumCount };
+    }
+    return this.#partialsDetails;
   }
-  return this.#partialsDetails;
-}
+  //211024
+  setPartialsType(type) {
+    let validTypes = ["none", "tenth", "hundredth", "thousandth"];
+    if (validTypes.includes(type)) {
 
+      this.clearTimer();
+
+      let time = this.getTime(this.counter.getCount(), this.getPartialsDetails(), true).timeFormatted;
+
+      this.partialsType = type;
+
+      if (type == "none" && this.viewIsMaximum) this.view.hidePartials();
+      let newCount = this.getTimeUnitFromTime(time, "partials");
+      console.log(newCount)
+      this.counter.setCount(newCount);
+
+      this.displayTime();
+      this.reinit();
+    }
+  }
+
+
+  setSetting({ hasAdditionalTimeEnabled, hasPartialsEnabled, partialsType, visualWarningStart, beepDuration }) {
+
+    this.settingModifying = true;
+
+    this.hasPartialsEnabled = hasPartialsEnabled.value;
+    this.setPartialsType(partialsType.value);
+
+    this.hasAdditionalTimeEnabled = hasAdditionalTimeEnabled.value;
+
+    this.criticalSecond = parseInt(visualWarningStart.value);
+    this.beepDurationSecond = parseInt(beepDuration.value);
+
+    setTimeout(() => {
+      this.settingModifying = false;
+    }, 5000)
+  }
   changeTitle(newTitle) {
     // if value entered is not empty
     if (newTitle?.length > 0) this.title = newTitle.slice(0, this.titleLength);
 
     this.view.changeTitle(this.title);
   }
-  
+
   changeView() {
     //Remove the old view from DOM
     this.view.unmount();
@@ -164,7 +205,7 @@ export default class Timer {
     // the timer has passed the critical time to send visual warning 
     if (this.hasWarned) this.#warn();
   }
-  
+
   //Counter Decoration 
   increment(timeUnit = "minutes") {
     this.changeBy(timeUnit);
@@ -182,7 +223,7 @@ export default class Timer {
 
     let count = this.counter.getCount();
 
-    let partialsDetails = this.getPartialsDetails ();
+    let partialsDetails = this.getPartialsDetails();
     let { remainingPartials: partials } = this.getTime(count, partialsDetails);
 
     let { partialsPerSecond, maximumCount } = partialsDetails;
@@ -352,6 +393,37 @@ export default class Timer {
         this.view.hideTimingControls()
       });
 
+      // Setting modal listeners 
+
+      this.view.settingButton.addEventListener("click", () => {
+
+        if (this.view.settingButton.getAttribute("next-action") == "open") {
+          this.view.showSettingModal();
+
+        } else {
+          this.view.hideSettingModal();
+        }
+      });
+
+      this.view.settingModal.addEventListener("click", (e) => {
+
+        if (!e.target.closest(".setting-container")) {
+          //this.view.settingForm.submit();
+        }
+      });
+
+      this.view.settingForm.addEventListener("submit", (e) => {
+        let form = e.target;
+
+        e.preventDefault();
+
+        this.setSetting(form.elements);
+
+        console.log(this.partialsType, this.hasAdditionalTimeEnabled, this.hasPartialsEnabled)
+
+        this.view.hideSettingModal();
+      });
+
     } else {
       // listeners for mini view
       this.view.miniTimerElement.addEventListener("click", this.maximizeView);
@@ -368,7 +440,7 @@ export default class Timer {
   }
 
   getTimeValue(timeUnit = "minutes", type = "string") {
-    let timeValues = this.getTime(this.counter.getCount(), this.getPartialsDetails ());
+    let timeValues = this.getTime(this.counter.getCount(), this.getPartialsDetails());
 
     let value;
 
@@ -394,7 +466,7 @@ export default class Timer {
   }
 
   setCountFromTime(hours, minutes, seconds, partials = 0) {
-    let { partialsPerSecond } = this.getPartialsDetails ();
+    let { partialsPerSecond } = this.getPartialsDetails();
 
     let hoursCount = Number(hours) * 3600 * partialsPerSecond;
     let minutesCount = Number(minutes) * 60 * partialsPerSecond;
@@ -413,10 +485,10 @@ export default class Timer {
   displayTime() {
 
     let count = this.counter.getCount();
-    let partialsDetails = this.getPartialsDetails ();
+    let partialsDetails = this.getPartialsDetails();
     let timeInfos = this.getTime(count, partialsDetails);
 
-    // boolean to show hours or not based on the view sisze
+    // boolean to show hours or not based on the view size
     let showHours = this.view.viewIsMaximum ? false : true;
 
     // the time has ended
@@ -469,8 +541,8 @@ export default class Timer {
     return partialsString;
   }
 
-  timeUnitFromTime(time, timeUnit="seconds") {
-    
+  getTimeUnitFromTime(time, targetTimeUnit = "seconds") {
+
     let timeRegExp = /^(?<hours>\d{1,2}):(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<seconds>\d{1,2})$/;
 
     const resultGroups = time.match(timeRegExp)?.groups;
@@ -484,23 +556,23 @@ export default class Timer {
       if (minutes) timerCountInSeconds += parseInt(minutes) * 60;
       if (seconds) timerCountInSeconds += parseInt(seconds);
 
-let result;
+      let result;
 
-switch (timeUnit) {
-  case 'hours':
-result = timerCountInSeconds / 3600 
-    break;
-  case 'minutes':
-result = timerCountInSeconds / 60
-break;
-case 'seconds':
-result = timerCountInSeconds;
-break;
-case 'partials':
-  let {partialsPerSecond } = this.getPartialsDetails();
-result = timerCountInSeconds * partialsPerSecond;
-break;
-}
+      switch (targetTimeUnit) {
+        case 'hours':
+          result = timerCountInSeconds / 3600
+          break;
+        case 'minutes':
+          result = timerCountInSeconds / 60
+          break;
+        case 'seconds':
+          result = timerCountInSeconds;
+          break;
+        case 'partials':
+          let { partialsPerSecond } = this.getPartialsDetails();
+          result = timerCountInSeconds * partialsPerSecond;
+          break;
+      }
       //set #count in seconds
       return result;
 
@@ -517,14 +589,14 @@ break;
     if (this.#timerId) return this.#timerId
     throw new Error("Can't Find Timer ID");
   }
-  
+
   getCounterId() {
     return this.counter?.getId();
   }
 
   getDefaultTime() {
     let defaultCount = this.counter.getDefaultCount();
-    let partialsDetails = this.getPartialsDetails ();
+    let partialsDetails = this.getPartialsDetails();
 
     return this.getTime(defaultCount, partialsDetails, true);
   }
@@ -590,8 +662,8 @@ break;
       secondsFormatted = "00";
     }
     timeFormatted += secondsFormatted;
-    
-remainingPartials = countProcessing;
+
+    remainingPartials = countProcessing;
 
     let partialsFormatted = this.getPartials(remainingPartials, partialsDetails, !isTimeout);
 
@@ -661,7 +733,7 @@ remainingPartials = countProcessing;
 
   //run the timer whenever it is called 
   #runTimer() {
-    let { value: partialsValue, maximum: partialsMax } = this.getPartialsDetails ();
+    let { value: partialsValue, maximum: partialsMax } = this.getPartialsDetails();
 
     let criticalCount = this.criticalSecond * partialsMax;
 
@@ -759,16 +831,16 @@ remainingPartials = countProcessing;
     // reinitialize the display of the maximum view if active
     if (this.view.viewIsMaximum) this.view.reinitDisplay();
   }
-  
+
   deleteTimer() {
     let counterId = this.getCounterId()
-    
+
     // test if the timer is the current timer in maximum view
     if (this === Timer.currentTimer) {
-     Timer.currentTimer = null
+      Timer.currentTimer = null
     }
     this.view.unmount();
-    Counter.idArray = Counter.idArray.filter(id=> id !== counterId);
+    Counter.idArray = Counter.idArray.filter(id => id !== counterId);
     Timer.timers = Timer.timers?.filter(timer => timer.getCounterId() !== counterId);
   }
 }
