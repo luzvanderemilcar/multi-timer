@@ -129,23 +129,23 @@ class View {
         <fieldset>
           <legend>Display additional time</legend>
         <div class="setting-item">
-          <input id="enable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="true" checked>
-          <label for="enable-additional-time" >Show</label>
-          <input id="disable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="false">
+          <input id="disable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="false" checked>
           <label for="disable-additional-time" >Hide</label>
+           <input id="enable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="true">
+          <label for="enable-additional-time" >Show</label>
         </div>
         </fieldset> 
         <hr/>
         <fieldset>
           <legend>Display partials</legend>
         <div class="setting-item">
-          <input id="enable-partials" type="radio" name="hasPartialsEnabled" value="true">
-          <label for="enable-partials">Show</label>
-          <input id="disable-partials" type="radio" name="hasPartialsEnabled" value="false" checked >
+          <input id="disable-partials" type="radio" name="hasPartialsEnabled" value="false" checked>
           <label for="disable-partials">Hide</label>
+           <input id="enable-partials" type="radio" name="hasPartialsEnabled" value="true">
+          <label for="enable-partials">Show</label>
         </div>
         <div class="setting-item">
-          <select name="partialsType" disabled >
+          <select class="partials-type" name="partialsType" disabled >
             <option value="tenth" checked>Tenth (0)</option>
             <option value="hundredth">Hundredth (00)</option>
           </select>
@@ -180,7 +180,7 @@ class View {
 
   initView() {
     this.timerContainer = document.querySelector("main");
-    
+
     this.timerElement = document.createElement("div");
 
     this.timerElement.innerHTML = View.timerHTML;
@@ -202,7 +202,7 @@ class View {
     this.secondElement = this.screenElement.querySelector("span.seconds");
     this.partialElement = this.screenElement.querySelector("span.partials");
     this.partialsContainerElement = this.screenElement.querySelector(".partials-display");
-    
+
     this.timeElements = this.screenElement.querySelectorAll("span.time-unit");
     this.additionalTimeContainerElement = this.screenElement.querySelector("div.additional-time");
 
@@ -223,18 +223,31 @@ class View {
 
     this.inputSecondElement = this.inputTimeModal.querySelector(".seconds");
     this.inputTimeElements = this.inputTimeModal.querySelectorAll("input");
-    
+
     this.setTimeButton = this.inputTimeModal.querySelector(".set-time");
     this.cancelSetTimeButton = this.inputTimeModal.querySelector(".cancel-set-time");
-    
+
     // Setting modal
     this.settingButton = this.timerElement.querySelector(".open-close-setting");
+
+    this.settingModal = this.timerElement.querySelector(".setting-modal");
+    this.settingForm = this.settingModal.querySelector(".setting-form");
+
+    this.additionalTimeSwichElement = this.settingForm.querySelector('[name="hasAdditionalTimeEnabled"]:checked');
     
-   this.settingModal = this.timerElement.querySelector(".setting-modal");
-   this.settingForm = this.settingModal.querySelector(".setting-form");
-   // Warning sections
-   
-    
+    // additional time
+    this.enableAdditonalTimeElement = this.settingForm.querySelector('input#enable-additional-time');
+    this.disableAdditonalTimeElement = this.settingForm.querySelector('input#disable-additional-time');
+
+    // Partials 
+    this.enablePartialsElement = this.settingForm.querySelector('input#enable-partials');
+    this.disablePartialsElement = this.settingForm.querySelector('input#disable-partials');
+    this.selectPartialsTypeElement = this.settingForm.querySelector('select.partials-type');
+
+    console.log(this.enablePartialsElement?.checked)
+    // Warning sections
+
+
     this.mount();
 
   }
@@ -290,11 +303,11 @@ class View {
 
   //remove the class highlight from the time-unit elements
 
-removeInputTimeHighLight() {
-  this.inputTimeElements.forEach(elem => {
-    if (elem.classList.contains("highlight")) elem.classList.remove("highlight");
-  });
-}
+  removeInputTimeHighLight() {
+    this.inputTimeElements.forEach(elem => {
+      if (elem.classList.contains("highlight")) elem.classList.remove("highlight");
+    });
+  }
 
   // hide element while keeping its space on the documen
   makeInvisible(element) {
@@ -325,28 +338,28 @@ removeInputTimeHighLight() {
   hideTimingControls() {
     this.hideInputTimeModal()
   }
-  
+
   showTimingControls() {
-   this.showInputTimeModal()
+    this.showInputTimeModal()
   }
-  
+
   // Setting modal
   showSettingModal() {
     this.show(this.settingModal);
-this.settingButton.innerHTML = "X";
-this.settingButton.setAttribute("next-action", "close");
+    this.settingButton.innerHTML = "X";
+    this.settingButton.setAttribute("next-action", "close");
   }
-  
-hideSettingModal() {
+
+  hideSettingModal() {
     this.hide(this.settingModal);
     this.settingButton.innerHTML = ":";
     this.settingButton.setAttribute("next-action", "open");
   }
-  
+
   hidePartials() {
     this.hide(this.partialsContainerElement);
-    }
-    
+  }
+
   // maximize the startpause button as for the initial look
   maximizeStartPause() {
 
@@ -380,15 +393,23 @@ hideSettingModal() {
     if (this.resetButton.classList.contains("max-button")) this.resetButton.classList.remove("max-button");
     this.show(this.startPauseButton);
   }
-  
+
   // Input time
   hideInputTimeModal() {
     this.hide(this.inputTimeModal);
   }
-  
+
   showInputTimeModal() {
     this.show(this.inputTimeModal);
   }
+  
+  hidePartialsDisplay() {
+    this.hide(this.partialsContainerElement);
+  }
+  
+  showPartialsDisplay() {
+  this.show(this.partialsContainerElement);
+}
 }
 
 // Capitalize the first letter of a word

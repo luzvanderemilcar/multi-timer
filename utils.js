@@ -7,9 +7,12 @@ function truncateInput(input, options = { length: 0, border: "start" }) {
 
     // If 
     if (length > 0) {
-      if (length >= inputLength) return input;
+      if (length >= inputLength) {
+       return input;
+      } else {
       if (border == "end") return input.slice(inputLength - length, inputLength);
       if (border == "start") return input.slice(0, length);
+      }
     }
     return input
   }

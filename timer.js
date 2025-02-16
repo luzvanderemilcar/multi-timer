@@ -34,7 +34,7 @@ export default class Timer {
     this.titleLength = 25;
     this.criticalSecond = 15;
     this.beepDurationSecond = 10;
-    this.hasPartialsEnabled = true;
+    this.hasPartialsEnabled = false;
 
     this.audioBeep = new Audio("/clock_sound_effect_beeping.mp3");
 
@@ -59,7 +59,7 @@ export default class Timer {
     if (!this.partialsType) {
       this.partialsType = 'none'; // none | tenth | hundredth | thousandth
     }
-    
+
     if (!this.#partialsDetails || this.settingModifying) {
       let maximumSecond = 359999;
 
@@ -412,6 +412,19 @@ export default class Timer {
         }
       });
 
+      // radio button click
+
+      this.view.enablePartialsElement.addEventListener("click", () => {
+        if (this.view.selectPartialsTypeElement.hasAttribute('disabled')) this.view.selectPartialsTypeElement.removeAttribute('disabled');
+        this.view.showPartialsDisplay();
+      });
+
+      this.view.disablePartialsElement.addEventListener("click", () => {
+        if (!this.view.selectPartialsTypeElement.hasAttribute('disabled')) this.view.selectPartialsTypeElement.setAttribute('disabled', "disabled");
+        this.view.hidePartialsDisplay();
+      });
+      
+      
       this.view.settingForm.addEventListener("submit", (e) => {
         let form = e.target;
 
@@ -747,7 +760,7 @@ export default class Timer {
       }
       // the countet reach 0
       if (this.counter.getCount() === 0) {
-        this.#beep(this.audioBeep, 10);
+        this.#beep(this.audioBeep, this.be);
         if (this.view.viewIsMaximum) this.view.startPauseButtonNext("stop");
 
         if (!this.hasTimeFinished) {
