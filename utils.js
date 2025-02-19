@@ -105,18 +105,15 @@ class State {
   }
 }
 
-function useState(initialValue) {
-  let state = initialValue;
+const useState = (initialValue) => {
+   let instance = new State(initialValue);
   
   function setState(value) {
-    state = value;
+    instance.setValue(value);
   }
   
- function getState() {
-   return state
- }
   
-  return [function(){return getState()}, setState];
+  return [instance.getValue(), setState];
 }
 
 let a = new State("6");
@@ -125,6 +122,6 @@ let [sum, setSum] = useState(6);
 
 setSum(7);
 
-console.log(sum(), a)
+console.log(sum, a)
 
 export { validateHourInput, validateMinuteInput, validateSecondInput, prependMissingZeros };

@@ -30,7 +30,7 @@ export default class Timer {
     this.hasStarted = false;
     this.hasTimeFinished = false;
     this.hasWarned = false;
-    this.hasAdditionalTimeEnabled = true;
+    this.hasAdditionalTimeEnabled = false ;
     this.titleLength = 25;
     this.criticalSecond = 15;
     this.beepDurationSecond = 10;
@@ -49,7 +49,6 @@ export default class Timer {
     this.changeTitle(title);
 
     this.displayTime();
-
     this.addListeners();
   }
 
@@ -85,12 +84,6 @@ export default class Timer {
           zeros = "00";
           partialsPerSecond = 100;
           break;
-        case 'thousandth':
-          value = .001;
-          maximum = 1000;
-          zeros = "000";
-          partialsPerSecond = 1000;
-          break;
 
       }
       maximumCount = maximumSecond * partialsPerSecond;
@@ -101,7 +94,7 @@ export default class Timer {
   }
   //211024
   setPartialsType(type) {
-    let validTypes = ["none", "tenth", "hundredth", "thousandth"];
+    let validTypes = ["none", "tenth", "hundredth"];
     if (validTypes.includes(type)) {
 
       this.clearTimer();
@@ -110,9 +103,10 @@ export default class Timer {
 
       this.partialsType = type;
 
-      if (type == "none" && this.viewIsMaximum) this.view.hidePartials();
+      if (type == "none" && this.viewIsMaximum) this.view.hidePartialsDisplay();
+      
       let newCount = this.getTimeUnitFromTime(time, "partials");
-      console.log(newCount)
+      
       this.counter.setCount(newCount);
 
       this.displayTime();
@@ -416,15 +410,36 @@ export default class Timer {
 
       this.view.enablePartialsElement.addEventListener("click", () => {
         if (this.view.selectPartialsTypeElement.hasAttribute('disabled')) this.view.selectPartialsTypeElement.removeAttribute('disabled');
+        this.view.selectPartialsTypeElement.focus();
+
+        if (this.view.nonePartialsTypeOptionElement.hasAttribute('selected')) {
+          // select tenth if "none" option is selected 
+          /*  this.view.nonePartialsTypeOptionElement.removeAttribute('checked');
+            this.view.tenthPartialsTypeOptionElement.setAttribute('checked', "");
+            */
+          console.log("None")
+        }
+
         this.view.showPartialsDisplay();
       });
 
       this.view.disablePartialsElement.addEventListener("click", () => {
-        if (!this.view.selectPartialsTypeElement.hasAttribute('disabled')) this.view.selectPartialsTypeElement.setAttribute('disabled', "disabled");
+        
+        // change select type to value none if click on disable partials
+        if (this.view.selectPartialsTypeElement.value !== "none") this.view.selectPartialsTypeElement == "none";
+        
+        if (!this.view.selectPartialsTypeElement.hasAttribute('disabled')) this.view.selectPartialsTypeElement.setAttribute('disabled', "");
+
         this.view.hidePartialsDisplay();
       });
-      
-      
+
+      this.view.selectPartialsTypeElement.addEventListener("blur", (e) => {
+        if (e.target.value == "none") {
+          // if "none" option is selected on blur, disable partials
+          this.view.disablePartialsElement.click();
+        }
+      });
+
       this.view.settingForm.addEventListener("submit", (e) => {
         let form = e.target;
 
@@ -432,7 +447,7 @@ export default class Timer {
 
         this.setSetting(form.elements);
 
-        console.log(this.partialsType, this.hasAdditionalTimeEnabled, this.hasPartialsEnabled)
+        console.log(this.hasAdditionalTimeEnabled)
 
         this.view.hideSettingModal();
       });
@@ -557,6 +572,7 @@ export default class Timer {
   getTimeUnitFromTime(time, targetTimeUnit = "seconds") {
 
     let timeRegExp = /^(?<hours>\d{1,2}):(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<minutes>\d{1,2}):(?<seconds>\d{1,2})$|^(?<seconds>\d{1,2})$/;
+console.log(time);
 
     const resultGroups = time.match(timeRegExp)?.groups;
 
@@ -590,10 +606,13 @@ export default class Timer {
       return result;
 
     } else {
-      throw new Error("Invalid time format !");
+      if(/[-]\d{2}\w*/g.test(time)) {
+        return 0;
+      } else {
+      throw new Error("Invalid time format !", time);
     }
   }
-
+}
   minutesFromTime(time) {
     return this.secondsFromTime(time) / 60;
   }
@@ -760,13 +779,13 @@ export default class Timer {
       }
       // the countet reach 0
       if (this.counter.getCount() === 0) {
-        this.#beep(this.audioBeep, this.be);
+        this.#beep(this.audioBeep, this.beepDuration);
         if (this.view.viewIsMaximum) this.view.startPauseButtonNext("stop");
 
         if (!this.hasTimeFinished) {
           this.hasTimeFinished = true;
-          if (!this.hasAdditionalTimeEnabled) this.#stop();
         }
+        if (!this.hasAdditionalTimeEnabled) this.#stop();
       }
     }, 1000 * partialsValue);
 

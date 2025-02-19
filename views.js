@@ -77,7 +77,7 @@ class View {
         <span id="second-display" class="seconds time-unit" name="seconds"></span>
         </div>
         
-        <div class="display-item partials-display">
+        <div class="display-item partials-display hidden" >
        <span class="separator partials-separator">.</span>
         <span class="partials time-unit"></span>
         </div>
@@ -146,7 +146,8 @@ class View {
         </div>
         <div class="setting-item">
           <select class="partials-type" name="partialsType" disabled >
-            <option value="tenth" checked>Tenth (0)</option>
+            <option value="none" selected >None</option>
+            <option value="tenth">Tenth (0)</option>
             <option value="hundredth">Hundredth (00)</option>
           </select>
         </div>
@@ -243,8 +244,12 @@ class View {
     this.enablePartialsElement = this.settingForm.querySelector('input#enable-partials');
     this.disablePartialsElement = this.settingForm.querySelector('input#disable-partials');
     this.selectPartialsTypeElement = this.settingForm.querySelector('select.partials-type');
-
-    console.log(this.enablePartialsElement?.checked)
+    
+    // Options
+    this.nonePartialsTypeOptionElement = this.settingForm.querySelector('option[value="none"]');
+    
+    this.tenthPartialsTypeOptionElement = this.settingForm.querySelector('option[value="tenth"]');
+    
     // Warning sections
 
 
@@ -354,10 +359,6 @@ class View {
     this.hide(this.settingModal);
     this.settingButton.innerHTML = ":";
     this.settingButton.setAttribute("next-action", "open");
-  }
-
-  hidePartials() {
-    this.hide(this.partialsContainerElement);
   }
 
   // maximize the startpause button as for the initial look
