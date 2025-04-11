@@ -31,7 +31,7 @@ export default class Timer {
     this.hasStarted = false;
     this.hasTimeFinished = false;
     this.hasWarned = false;
-    this.hasAdditionalTimeEnabled = false;
+    this.hasAdditionalTimeEnabled = true;
     this.titleLength = 25;
     this.criticalSecond = 15;
     this.beepDurationSecond = 10;

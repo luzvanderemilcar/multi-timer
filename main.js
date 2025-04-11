@@ -24,8 +24,9 @@ function saveTimersDetails() {
 }
 
 // initialize timers from storage
-initializeSavedTimers([{title: "All event", time: "3:30:00", initAsCurrent: false}, {title: "Introducing talk", time: "00:10:00", initAsCurrent: true},{title: "Second talk", time: "10:00", initAsCurrent: false}, {title: "Concluding talk", time: "30:00", initAsCurrent: false}, ]);
-//Timer.currentTimer.deleteTimer();
+//initializeSavedTimers([{title: "All event", time: "3:30:00", initAsCurrent: false}, {title: "Introducing talk", time: "00:10:00", initAsCurrent: true},{title: "Second talk", time: "10:00", initAsCurrent: false}, {title: "Concluding talk", time: "30:00", initAsCurrent: false}, ]);
+
+initializeSavedTimers([{title: "Trezò", time: "9:30", initAsCurrent: true}, {title: "Kòmantè", time: "0:30", initAsCurrent: false}]);
 
 console.log(getTimersDetails());
 

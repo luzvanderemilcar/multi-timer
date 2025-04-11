@@ -134,9 +134,9 @@ class View {
         <fieldset>
           <legend>Display additional time</legend>
         <div class="setting-item">
-          <input id="disable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="false" checked>
+          <input id="disable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="false">
           <label for="disable-additional-time" >Hide</label>
-           <input id="enable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="true">
+           <input id="enable-additional-time" type="radio" name="hasAdditionalTimeEnabled" value="true" checked>
           <label for="enable-additional-time" >Show</label>
         </div>
         </fieldset> 
