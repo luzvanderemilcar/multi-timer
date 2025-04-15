@@ -30,9 +30,12 @@ class MiniView {
     document.querySelector(".timer-list").append(this.miniTimerElement);
     
     // media query for extended screen sizes
-    let extendedMediaOn = matchMedia('min-width: 768px');
-    if (!extendedMediaOn.matches) {
-    this.miniTimerElement.scrollIntoView(true)
+    let extendedScreenMedia = window.matchMedia('min-width:768px');
+    
+    console.log(extendedScreenMedia);
+    
+    if (!extendedScreenMedia.matches) {
+    this.miniTimerElement.scrollIntoView()
     }
   }
 

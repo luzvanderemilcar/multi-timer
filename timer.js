@@ -27,11 +27,8 @@ export default class Timer {
     
     this.counter = new Counter(this.getTimeUnitFromTime(time, "partials"));
     
-    
-    this.hasStarted = false;
-    this.hasTimeFinished = false;
     this.hasWarned = false;
-    this.hasAdditionalTimeEnabled = true;
+    this.hasAdditionalTimeEnabled = false;
     this.titleLength = 25;
     this.criticalSecond = 15;
     this.beepDurationSecond = 10;
@@ -66,14 +63,13 @@ export default class Timer {
   
   // Init timer 
   getPartialsDetails() {
-    
+    let lastPartialsType;
     if (!this.partialsType) {
       this.partialsType = 'none'; // none | tenth | hundredth 
     }
     
-    if (!this.#partialsDetails || this.settingModifying) {
+    if (lastPartialsType !== this.partialsType) {
       let maximumSecond = 359999;
-      
       let value, maximum, minimum, zeros, partialsPerSecond, maximumCount;
       
       switch (this.partialsType) {
@@ -96,20 +92,21 @@ export default class Timer {
           zeros = "00";
           partialsPerSecond = 100;
           break;
-          
       }
+      
       maximumCount = maximumSecond * partialsPerSecond;
       
       this.#partialsDetails = { value, type: this.partialsType, maximum, minimum: 1, zeros, partialsPerSecond, maximumCount };
+      
+      this.lastPartialsType = this.partialsType;
     }
+    
     return this.#partialsDetails;
   }
   
   setPartialsType(type) {
     let validTypes = ["none", "tenth", "hundredth"];
     if (validTypes.includes(type)) {
-      
-      this.clearTimer();
       
       let time = this.getTime(this.counter.getCount(), this.getPartialsDetails(), true).timeFormatted;
       
@@ -129,8 +126,6 @@ export default class Timer {
   
   setSetting({ hasAdditionalTimeEnabled, hasPartialsEnabled, partialsType, visualWarningStart, beepDuration }) {
     
-    this.settingModifying = true;
-    
     this.hasPartialsEnabled = hasPartialsEnabled.value;
     this.setPartialsType(partialsType.value);
     
@@ -139,9 +134,6 @@ export default class Timer {
     this.criticalSecond = parseInt(visualWarningStart.value);
     this.beepDurationSecond = parseInt(beepDuration.value);
     
-    setTimeout(() => {
-      this.settingModifying = false;
-    }, 5000)
   }
   changeTitle(newTitle) {
     // if value entered is not empty
@@ -319,7 +311,7 @@ export default class Timer {
       });
       
       this.view.resetButton.addEventListener("click", () => {
-        this.reset();
+        this.#reset();
       });
       // save time input 
       
@@ -401,10 +393,16 @@ export default class Timer {
       
       // Setting modal listeners 
       
-      this.view.settingButton.addEventListener("click", () => {
+      this.view.settingButton.addEventListener("click", async () => {
         
-        if (this.view.settingButton.getAttribute("next-action") == "open") {
-          this.view.showSettingModal();
+        if (this.view.settingButton.getAttribute("next-action") === "open") {
+          if (this.getStatus() === "running" && confirm("The timer is running !\nWould you like to pause it ?")) {
+            this.#pause(); // pause the timer
+            this.view.showSettingModal();
+          }
+          else if (this.getStatus() !== "running") {
+            this.view.showSettingModal();
+          }
           
         } else {
           this.view.hideSettingModal();
@@ -425,11 +423,8 @@ export default class Timer {
         this.view.selectPartialsTypeElement.focus();
         
         if (this.view.nonePartialsTypeOptionElement.hasAttribute('selected')) {
-          // select tenth if "none" option is selected 
-          /*  this.view.nonePartialsTypeOptionElement.removeAttribute('checked');
-            this.view.tenthPartialsTypeOptionElement.setAttribute('checked', "");
-            */
-          console.log("None")
+          // select 'tenth' if "None" option is selected 
+          this.view.selectPartialsTypeElement.value = "tenth";
         }
         
         this.view.showPartialsDisplay();
@@ -438,7 +433,9 @@ export default class Timer {
       this.view.disablePartialsElement.addEventListener("click", () => {
         
         // change select type to value none if click on disable partials
-        if (this.view.selectPartialsTypeElement.value !== "none") this.view.selectPartialsTypeElement == "none";
+        if (this.view.selectPartialsTypeElement.value !== "none") {
+          this.view.selectPartialsTypeElement.value = "none";
+        }
         
         if (!this.view.selectPartialsTypeElement.hasAttribute('disabled')) this.view.selectPartialsTypeElement.setAttribute('disabled', "");
         
@@ -447,7 +444,7 @@ export default class Timer {
       
       this.view.selectPartialsTypeElement.addEventListener("blur", (e) => {
         if (e.target.value == "none") {
-          // if "none" option is selected on blur, disable partials
+          // if "None" option is selected on blur, disable partials
           this.view.disablePartialsElement.click();
         }
       });
@@ -458,8 +455,7 @@ export default class Timer {
         e.preventDefault();
         
         this.setSetting(form.elements);
-        
-        console.log(this.hasAdditionalTimeEnabled)
+        console.log(this.hasAdditionalTimeEnabled);
         
         this.view.hideSettingModal();
       });
@@ -499,8 +495,8 @@ export default class Timer {
         break;
         
     }
-    
-    if (type === "number") value = parseInt(value);
+    // change the type of the value if wanted
+    if (type === "number") value = Number(value);
     
     return value;
   }
@@ -784,23 +780,26 @@ export default class Timer {
       // the count is lower than the critical count
       if (this.counter.getCount() <= criticalCount && !this.hasWarned) {
         this.#warn();
+        if (this.getStatus() !== 'running') {
+          this.setStatus('running');
+        }
       }
       // the countet reach 0
       if (this.counter.getCount() === 0) {
         this.#beep(this.audioBeep, this.beepDuration);
-        if (this.view.viewIsMaximum) this.view.startPauseButtonNext("stop");
         
-        if (this.getStatus() !== 'ended') {
-          this.setStatus('ended');
+        if (!this.hasAdditionalTimeEnabled) {
+          this.#end();
+        } else {
+          if (this.getStatus() !== "ended") {
+          this.setStatus("ended");
+          if (this.view.viewIsMaximum) {
+         this.view.startPauseButtonNext("stop");
+}
+          }
         }
-        
-        if (!this.hasAdditionalTimeEnabled) this.#stop();
       }
     }, 1000 * partialsValue);
-    
-    if (this.getStatus() !== 'running') {
-      this.setStatus('running');
-    }
   }
   
   #start() {
@@ -817,7 +816,7 @@ export default class Timer {
       this.setStatus('paused');
     }
     if (this.view.viewIsMaximum) {
-      if (!this.hasTimeFinished) this.view.startPauseButtonNext("resume");
+      if (this.getStatus() === "paused") this.view.startPauseButtonNext("resume");
     }
     //clear the timeout
     this.clearTimer();
@@ -825,39 +824,45 @@ export default class Timer {
   
   #resume() {
     if (this.getStatus() == "paused") {
+      
       this.#runTimer();
+      this.setStatus("running");
       
       if (this.view.viewIsMaximum) {
         this.view.startPauseButtonNext("pause");
       }
-      this.setStatus("running");
     }
   }
   
   #stop() {
-    if (this.getStatus() == 'ended') {
+    if (this.getStatus() !== 'stopped') {
       this.clearTimer();
-      this.#stopBeep(this.audioBeep);
+      this.setStatus('stopped');
       this.view.maximizeResetButton();
-      if (this.getStatus() !== 'stopped') {
-        this.setStatus('stopped');
-      }
+      this.#stopBeep(this.audioBeep);
     }
+  }
+  
+  #end() {
+      this.clearTimer();
+      this.setStatus('ended');
+    this.view.maximizeResetButton();
   }
   
   // Clear the timer intervall
   clearTimer() {
     if (this.#timerId) {
       clearInterval(this.#timerId);
-      this.#stopBeep(this.audioBeep);
       this.#timerId = null;
     }
   }
   
   // reset the counter, the timer and its state 
-  reset() {
+  #reset() {
     this.counter.reset();
     this.clearTimer();
+    this.#stopBeep(this.audioBeep);
+    
     this.reinit();
     this.displayTime();
     
