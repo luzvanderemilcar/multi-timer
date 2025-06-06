@@ -131,6 +131,7 @@ export default class Timer {
     
     this.hasAdditionalTimeEnabled = hasAdditionalTimeEnabled.value;
     
+    console.log(this.hasAdditionalTimeEnabled);
     this.criticalSecond = parseInt(visualWarningStart.value);
     this.beepDurationSecond = parseInt(beepDuration.value);
     
@@ -656,16 +657,16 @@ export default class Timer {
       isTimeout = false
     }
     
-    //get current count
+    //get current count absolute value 
     let countProcessing = Math.abs(count);
     
     let hourFactor = secondsPerHour * partialsPerSecond;
     
-    //  seconds greater or equal to one hour
+    //  partials greater or equal to one hour
     if (countProcessing / hourFactor >= 1) {
       hours = Math.floor(countProcessing / hourFactor);
       
-      // prepend 0 if hour number lesser then 10
+      // prepend 0 if hour number fewer then 10
       hoursFormatted = `${hours<10 ? "0": ""}${hours}`;
       
       countProcessing -= hours * hourFactor;
@@ -677,9 +678,9 @@ export default class Timer {
       timeFormatted += hoursFormatted + ":";
     }
     
-    //remaining seconds greater or equal to one minute
     let minuteFactor = secondsPerMinute * partialsPerSecond;
     
+    //remaining partials greater or equal to one minute
     if (countProcessing / minuteFactor >= 1) {
       minutes = Math.floor(countProcessing / minuteFactor);
       minutesFormatted = `${minutes<10 ? "0": ""}${minutes}`;
@@ -688,6 +689,8 @@ export default class Timer {
       minutesFormatted = "00"
     }
     timeFormatted += minutesFormatted + ":";
+    
+    //remaining partials greater or equal to one second 
     if (countProcessing / partialsPerSecond >= 1) {
       seconds = Math.floor(countProcessing / partialsPerSecond);
       
@@ -699,6 +702,7 @@ export default class Timer {
     }
     timeFormatted += secondsFormatted;
     
+    // remaining partials
     remainingPartials = countProcessing;
     
     let partialsFormatted = this.getPartials(remainingPartials, partialsDetails, !isTimeout);
@@ -788,14 +792,14 @@ export default class Timer {
       if (this.counter.getCount() === 0) {
         this.#beep(this.audioBeep, this.beepDuration);
         
-        if (!this.hasAdditionalTimeEnabled) {
-          this.#end();
-        } else {
+        if (this.hasAdditionalTimeEnabled) {
           if (this.getStatus() !== "ended") {
-          this.setStatus("ended");
-          if (this.view.viewIsMaximum) {
-         this.view.startPauseButtonNext("stop");
-}
+            this.setStatus("ended");
+            if (this.view.viewIsMaximum) {
+              this.view.startPauseButtonNext("stop");
+            } else {
+              this.#end();
+            }
           }
         }
       }
@@ -844,8 +848,8 @@ export default class Timer {
   }
   
   #end() {
-      this.clearTimer();
-      this.setStatus('ended');
+    this.clearTimer();
+    this.setStatus('ended');
     this.view.maximizeResetButton();
   }
   
